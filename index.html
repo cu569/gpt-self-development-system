@@ -1,83 +1,336 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>새 페이지로 이동 중...</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 50px;
-      background: #f5f5f5;
-    }
-    h1 {
-      font-size: 2em;
-      color: #222;
-    }
-    .countdown {
-      font-size: 3em;
-      color: #0077cc;
-      margin: 20px 0;
-    }
-    button {
-      padding: 15px 25px;
-      font-size: 1.1em;
-      margin: 10px;
-      cursor: pointer;
-      border: none;
-      border-radius: 8px;
-      background: #0077cc;
-      color: white;
-    }
-    button:hover {
-      background: #0055aa;
-    }
-    .cancel-btn {
-      background: #ff4444;
-    }
-    .cancel-btn:hover {
-      background: #cc3333;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube 도우미</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        
+        .input-group {
+            margin: 20px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .feature-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .feature-btn {
+            background: #28a745;
+            font-size: 14px;
+            padding: 8px 16px;
+        }
+        
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
 </head>
 <body>
-  <h1>🎯 새로운 멀티 코치 GPT 시스템으로 이동합니다!</h1>
-  <p>최신 기능이 포함된 완전한 시스템을 만나보세요.</p>
-  <div class="countdown" id="count">5</div>
-  <button onclick="moveNow()">👉 지금 이동하기</button>
-  <button class="cancel-btn" onclick="cancel()">⛔ 이동 취소</button>
-  
-  <script>
-    let count = 5;
-    let isActive = true;
-    
-    function updateCountdown() {
-      if (!isActive) return;
-      
-      count--;
-      document.getElementById('count').innerText = count;
-      
-      if (count <= 0) {
-        moveNow();
-      }
-    }
-    
-    function moveNow() {
-      isActive = false;
-      document.getElementById('count').innerText = "이동 중...";
-      window.location.href = "https://cu569.github.io/gpt-self-development-system";
-    }
-    
-    function cancel() {
-      isActive = false;
-      document.querySelector("h1").innerText = "이동이 취소되었습니다.";
-      document.getElementById('count').style.display = 'none';
-      document.querySelector('p').innerText = "언제든 다시 이동할 수 있습니다.";
-    }
-    
-    // 1초마다 카운트다운 실행
-    setInterval(updateCountdown, 1000);
-  </script>
+    <div class="container">
+        <h1>🎥 YouTube 도우미</h1>
+        
+        <div class="input-group">
+            <label for="topic">주제를 입력하세요:</label>
+            <input type="text" id="topic" placeholder="예: 요리, 여행, 게임...">
+        </div>
+        
+        <div class="feature-buttons">
+            <button class="feature-btn" onclick="generateTitle()">📝 제목 생성</button>
+            <button class="feature-btn" onclick="generateDescription()">📄 설명 생성</button>
+            <button class="feature-btn" onclick="generateTags()">🏷️ 태그 생성</button>
+            <button class="feature-btn" onclick="generateScript()">📋 스크립트 생성</button>
+        </div>
+        
+        <div class="input-group">
+            <label for="customInput">또는 직접 입력:</label>
+            <textarea id="customInput" rows="4" placeholder="여기에 요청사항을 입력하세요..."></textarea>
+        </div>
+        
+        <button onclick="processCustomInput()">✨ 처리하기</button>
+        <button onclick="clearAll()">🗑️ 초기화</button>
+        
+        <div id="status" class="status hidden"></div>
+        <div id="result" class="result hidden"></div>
+    </div>
+
+    <script>
+        // 상태 표시 함수
+        function showStatus(message, type = 'success') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.classList.remove('hidden');
+            
+            setTimeout(() => {
+                status.classList.add('hidden');
+            }, 3000);
+        }
+        
+        // 결과 표시 함수
+        function showResult(content) {
+            const result = document.getElementById('result');
+            result.innerHTML = content;
+            result.classList.remove('hidden');
+        }
+        
+        // 제목 생성
+        function generateTitle() {
+            const topic = document.getElementById('topic').value;
+            if (!topic) {
+                showStatus('주제를 입력해주세요!', 'error');
+                return;
+            }
+            
+            showStatus('제목 생성 중...');
+            
+            // 간단한 제목 생성 로직
+            const titles = [
+                `🔥 ${topic} 완벽 가이드 - 초보자도 쉽게!`,
+                `💯 ${topic} 꿀팁 대공개! 이것만 알면 끝!`,
+                `🚀 ${topic} 마스터 되는 법 - 10분만 투자하세요!`,
+                `⭐ ${topic} 전문가가 알려주는 비밀 노하우`,
+                `🎯 ${topic} 완전 정복! 따라만 하면 성공!`
+            ];
+            
+            const randomTitle = titles[Math.floor(Math.random() * titles.length)];
+            showResult(`<h3>생성된 제목:</h3><p><strong>${randomTitle}</strong></p>`);
+        }
+        
+        // 설명 생성
+        function generateDescription() {
+            const topic = document.getElementById('topic').value;
+            if (!topic) {
+                showStatus('주제를 입력해주세요!', 'error');
+                return;
+            }
+            
+            showStatus('설명 생성 중...');
+            
+            const description = `
+🎥 ${topic}에 대한 완벽한 가이드를 준비했습니다!
+
+✨ 이 영상에서 다룰 내용:
+• ${topic}의 기본 개념과 핵심 포인트
+• 실전에서 바로 적용할 수 있는 실용적인 팁
+• 초보자도 쉽게 따라할 수 있는 단계별 설명
+• 자주 묻는 질문들과 해답
+
+🔥 ${topic}을 완전히 마스터하고 싶다면 끝까지 시청해주세요!
+
+👍 도움이 되었다면 좋아요와 구독 부탁드립니다!
+🔔 알림 설정하고 새로운 영상 소식을 받아보세요!
+
+#${topic} #가이드 #꿀팁 #초보자 #튜토리얼
+            `;
+            
+            showResult(`<h3>생성된 설명:</h3><pre>${description}</pre>`);
+        }
+        
+        // 태그 생성
+        function generateTags() {
+            const topic = document.getElementById('topic').value;
+            if (!topic) {
+                showStatus('주제를 입력해주세요!', 'error');
+                return;
+            }
+            
+            showStatus('태그 생성 중...');
+            
+            const baseTags = ['가이드', '꿀팁', '초보자', '튜토리얼', '완전정복', '마스터', '비법'];
+            const tags = [topic, ...baseTags.slice(0, 6)];
+            
+            showResult(`<h3>생성된 태그:</h3><p>${tags.map(tag => `#${tag}`).join(' ')}</p>`);
+        }
+        
+        // 스크립트 생성
+        function generateScript() {
+            const topic = document.getElementById('topic').value;
+            if (!topic) {
+                showStatus('주제를 입력해주세요!', 'error');
+                return;
+            }
+            
+            showStatus('스크립트 생성 중...');
+            
+            const script = `
+🎬 ${topic} 영상 스크립트
+
+【인트로 - 0:00~0:30】
+안녕하세요! 오늘은 ${topic}에 대해 알아보겠습니다.
+이 영상 하나로 ${topic}을 완전히 마스터할 수 있을 거예요!
+
+【본론 1 - 0:30~2:00】
+먼저 ${topic}의 기본 개념부터 설명드릴게요.
+${topic}이란 무엇인지, 왜 중요한지 함께 알아보죠.
+
+【본론 2 - 2:00~4:00】
+이제 실전 팁을 공유해드릴게요.
+이 방법들을 따라하시면 분명 도움이 될 거예요.
+
+【본론 3 - 4:00~6:00】
+자주 묻는 질문들과 해답을 정리했습니다.
+궁금했던 점들이 해결되실 거예요.
+
+【마무리 - 6:00~7:00】
+오늘 ${topic}에 대해 알아봤는데 어떠셨나요?
+도움이 되었다면 좋아요와 구독 부탁드려요!
+            `;
+            
+            showResult(`<h3>생성된 스크립트:</h3><pre>${script}</pre>`);
+        }
+        
+        // 사용자 입력 처리
+        function processCustomInput() {
+            const input = document.getElementById('customInput').value;
+            if (!input) {
+                showStatus('내용을 입력해주세요!', 'error');
+                return;
+            }
+            
+            showStatus('처리 중...');
+            
+            // 간단한 키워드 기반 응답
+            let response = '';
+            
+            if (input.includes('제목') || input.includes('title')) {
+                response = '🎯 매력적인 제목 만들기 팁:\n• 숫자 사용하기 (5가지, 10분)\n• 감정 표현하기 (놀라운, 충격적인)\n• 호기심 유발하기 (비밀, 진실)\n• 이모지 활용하기 🔥⭐💯';
+            } else if (input.includes('조회수') || input.includes('views')) {
+                response = '📈 조회수 늘리기 방법:\n• 첫 24시간이 중요해요\n• 썸네일을 눈에 띄게 만드세요\n• 제목에 검색 키워드 포함\n• 적절한 시간대에 업로드';
+            } else if (input.includes('썸네일') || input.includes('thumbnail')) {
+                response = '🎨 썸네일 제작 팁:\n• 밝고 선명한 색상 사용\n• 큰 글씨로 핵심 메시지 전달\n• 얼굴 표정 활용\n• 대비 효과 활용';
+            } else {
+                response = `✨ "${input}"에 대한 조언:\n\n• 일관성 있게 콘텐츠 업로드하기\n• 시청자와 소통하기\n• 트렌드 파악하고 활용하기\n• 고유한 스타일 만들기\n• 인내심 갖고 꾸준히 하기`;
+            }
+            
+            showResult(`<h3>AI 조언:</h3><p style="white-space: pre-line;">${response}</p>`);
+        }
+        
+        // 초기화
+        function clearAll() {
+            document.getElementById('topic').value = '';
+            document.getElementById('customInput').value = '';
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('status').classList.add('hidden');
+            showStatus('초기화 완료!');
+        }
+        
+        // 엔터키 처리
+        document.getElementById('topic').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateTitle();
+            }
+        });
+        
+        document.getElementById('customInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                processCustomInput();
+            }
+        });
+        
+        // 페이지 로드 시 환영 메시지
+        window.addEventListener('load', function() {
+            showStatus('YouTube 도우미에 오신 것을 환영합니다! 🎉');
+        });
+    </script>
 </body>
 </html>
