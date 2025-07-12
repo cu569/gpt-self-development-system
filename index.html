@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube 도우미</title>
+    <title>자가학습 AI 코치</title>
     <style>
         * {
             margin: 0;
@@ -15,321 +15,1060 @@
             font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            color: #333;
         }
         
         .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: 100vh;
+        }
+        
+        .panel {
             background: white;
-            padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            max-width: 500px;
-            width: 90%;
-            text-align: center;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
         }
         
-        h1 {
-            color: #333;
+        .panel h2 {
             margin-bottom: 20px;
-            font-size: 2em;
+            color: #333;
+            text-align: center;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
         }
         
-        .input-group {
-            margin: 20px 0;
+        /* 왼쪽 패널 - 실습/작업 영역 */
+        .workspace {
+            position: relative;
         }
         
-        label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: bold;
-            color: #555;
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
         
-        input, textarea {
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f8f9fa;
+        }
+        
+        .upload-area.dragover {
+            border-color: #28a745;
+            background: #e8f5e8;
+        }
+        
+        #imagePreview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .analysis-result {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .user-input {
+            margin-top: 20px;
+        }
+        
+        .user-input textarea {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             border: 2px solid #ddd;
-            border-radius: 8px;
+            border-radius: 10px;
+            resize: vertical;
+            min-height: 80px;
             font-size: 16px;
-            transition: border-color 0.3s;
         }
         
-        input:focus, textarea:focus {
+        .user-input textarea:focus {
             outline: none;
             border-color: #667eea;
         }
         
-        button {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            margin: 10px;
-            transition: transform 0.2s;
+        /* 오른쪽 패널 - 코치 영역 */
+        .coach-panel {
+            position: relative;
         }
         
-        button:hover {
-            transform: translateY(-2px);
-        }
-        
-        button:active {
-            transform: translateY(0);
-        }
-        
-        .result {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        .feature-buttons {
+        .coach-tabs {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin: 20px 0;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 5px;
         }
         
-        .feature-btn {
-            background: #28a745;
-            font-size: 14px;
-            padding: 8px 16px;
-        }
-        
-        .status {
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
+        .coach-tab {
+            flex: 1;
+            padding: 10px 15px;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
             font-weight: bold;
         }
         
-        .status.success {
-            background: #d4edda;
-            color: #155724;
+        .coach-tab.active {
+            background: #667eea;
+            color: white;
         }
         
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
+        .coach-content {
+            flex: 1;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .coach-content.active {
+            display: block;
+        }
+        
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            background: #fafafa;
+            margin-bottom: 15px;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            max-width: 80%;
+            line-height: 1.5;
+        }
+        
+        .message.user {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .message.ai {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .message.coach {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+        
+        .learning-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .progress-section {
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .analysis-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .coach-suggestion {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .typing-indicator {
+            color: #666;
+            font-style: italic;
+            animation: dots 1.5s infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { opacity: 0; }
+            40% { opacity: 0.5; }
+            60% { opacity: 1; }
+            80%, 100% { opacity: 0.5; }
+        }
+        
+        .voice-controls {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .voice-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .voice-btn.recording {
+            background: #ff0000;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎥 YouTube 도우미</h1>
-        
-        <div class="input-group">
-            <label for="topic">주제를 입력하세요:</label>
-            <input type="text" id="topic" placeholder="예: 요리, 여행, 게임...">
+        <!-- 왼쪽 패널: 실습/작업 영역 -->
+        <div class="panel workspace">
+            <h2>🎨 실습 작업 영역</h2>
+            
+            <div class="upload-area" id="uploadArea">
+                <div>
+                    <p>📁 파일을 드래그하거나 클릭하여 업로드</p>
+                    <p>이미지, 문서, 오디오 파일 지원</p>
+                </div>
+                <input type="file" id="fileInput" style="display: none;" accept="image/*,audio/*,.txt,.pdf,.docx">
+                <img id="imagePreview" alt="업로드된 이미지">
+            </div>
+            
+            <div id="analysisResults"></div>
+            
+            <div class="user-input">
+                <div class="voice-controls">
+                    <button class="voice-btn" id="voiceBtn" title="음성 입력">🎤</button>
+                    <button class="btn btn-secondary" onclick="clearWorkspace()">🗑️ 초기화</button>
+                </div>
+                <textarea id="userInput" placeholder="작업에 대한 질문이나 요청사항을 입력하세요..."></textarea>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="processInput()">💬 분석 요청</button>
+                    <button class="btn btn-success" onclick="getCoachFeedback()">🎯 코치 조언</button>
+                </div>
+            </div>
         </div>
         
-        <div class="feature-buttons">
-            <button class="feature-btn" onclick="generateTitle()">📝 제목 생성</button>
-            <button class="feature-btn" onclick="generateDescription()">📄 설명 생성</button>
-            <button class="feature-btn" onclick="generateTags()">🏷️ 태그 생성</button>
-            <button class="feature-btn" onclick="generateScript()">📋 스크립트 생성</button>
+        <!-- 오른쪽 패널: AI 코치 영역 -->
+        <div class="panel coach-panel">
+            <h2>🤖 AI 멀티 코치</h2>
+            
+            <div class="coach-tabs">
+                <button class="coach-tab active" onclick="switchTab('chat')">💬 실시간 코치</button>
+                <button class="coach-tab" onclick="switchTab('progress')">📊 학습 진도</button>
+                <button class="coach-tab" onclick="switchTab('analysis')">🔍 분석 히스토리</button>
+            </div>
+            
+            <!-- 실시간 코치 채팅 -->
+            <div class="coach-content active" id="chatContent">
+                <div class="chat-container" id="chatContainer">
+                    <div class="message ai">
+                        <strong>GPT 코치:</strong> 안녕하세요! 저는 여러분의 학습을 도와드리는 AI 코치입니다. 🚀<br><br>
+                        <strong>Claude 코치:</strong> 함께 작업하며 실시간으로 피드백을 드릴게요! 💡<br><br>
+                        무엇이든 업로드하거나 질문해보세요!
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="text" id="chatInput" placeholder="코치에게 질문하세요..." style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 8px;">
+                    <button class="btn btn-primary" onclick="sendChatMessage()">전송</button>
+                </div>
+            </div>
+            
+            <!-- 학습 진도 -->
+            <div class="coach-content" id="progressContent">
+                <div class="learning-stats">
+                    <div class="stat-card">
+                        <span class="stat-number" id="sessionCount">0</span>
+                        <span>학습 세션</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="improvementScore">0%</span>
+                        <span>향상도</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="feedbackCount">0</span>
+                        <span>받은 피드백</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="skillLevel">초급</span>
+                        <span>현재 레벨</span>
+                    </div>
+                </div>
+                
+                <div class="progress-section">
+                    <h4>📈 전체 학습 진도</h4>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="overallProgress" style="width: 15%"></div>
+                    </div>
+                    <p>15% - 기초 단계를 마스터하고 있어요!</p>
+                    
+                    <h4>🎯 주요 스킬 발전도</h4>
+                    <div style="margin: 10px 0;">
+                        <p>창의성: <span style="float: right;">⭐⭐⭐☆☆</span></p>
+                        <p>분석력: <span style="float: right;">⭐⭐☆☆☆</span></p>
+                        <p>실행력: <span style="float: right;">⭐⭐⭐⭐☆</span></p>
+                    </div>
+                </div>
+                
+                <div class="coach-suggestion">
+                    <h4>💡 다음 단계 추천</h4>
+                    <p>• 더 복잡한 프로젝트에 도전해보세요</p>
+                    <p>• 다양한 스타일의 작업을 시도해보세요</p>
+                    <p>• 피드백을 바탕으로 개선점을 적용해보세요</p>
+                </div>
+            </div>
+            
+            <!-- 분석 히스토리 -->
+            <div class="coach-content" id="analysisContent">
+                <div id="historyList">
+                    <p>아직 분석 기록이 없습니다. 파일을 업로드하거나 질문을 해보세요!</p>
+                </div>
+            </div>
         </div>
-        
-        <div class="input-group">
-            <label for="customInput">또는 직접 입력:</label>
-            <textarea id="customInput" rows="4" placeholder="여기에 요청사항을 입력하세요..."></textarea>
-        </div>
-        
-        <button onclick="processCustomInput()">✨ 처리하기</button>
-        <button onclick="clearAll()">🗑️ 초기화</button>
-        
-        <div id="status" class="status hidden"></div>
-        <div id="result" class="result hidden"></div>
     </div>
 
     <script>
-        // 상태 표시 함수
-        function showStatus(message, type = 'success') {
-            const status = document.getElementById('status');
-            status.textContent = message;
-            status.className = `status ${type}`;
-            status.classList.remove('hidden');
-            
-            setTimeout(() => {
-                status.classList.add('hidden');
-            }, 3000);
+        // 전역 변수
+        let learningData = {
+            sessions: 0,
+            feedbacks: [],
+            improvements: [],
+            analysisHistory: [],
+            userPreferences: {},
+            skillProgress: {
+                creativity: 3,
+                analysis: 2,
+                execution: 4
+            }
+        };
+        
+        let isListening = false;
+        let recognition = null;
+        
+        // 음성 인식 초기화
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = 'ko-KR';
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                
+                recognition.onstart = function() {
+                    isListening = true;
+                    document.getElementById('voiceBtn').classList.add('recording');
+                };
+                
+                recognition.onresult = function(event) {
+                    const result = event.results[0][0].transcript;
+                    document.getElementById('userInput').value = result;
+                    processInput();
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error:', event.error);
+                    stopListening();
+                };
+                
+                recognition.onend = function() {
+                    stopListening();
+                };
+                
+                return true;
+            }
+            return false;
         }
         
-        // 결과 표시 함수
-        function showResult(content) {
-            const result = document.getElementById('result');
-            result.innerHTML = content;
-            result.classList.remove('hidden');
-        }
-        
-        // 제목 생성
-        function generateTitle() {
-            const topic = document.getElementById('topic').value;
-            if (!topic) {
-                showStatus('주제를 입력해주세요!', 'error');
+        function toggleVoice() {
+            if (!recognition) {
+                alert('음성 인식을 지원하지 않는 브라우저입니다.');
                 return;
             }
             
-            showStatus('제목 생성 중...');
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+        
+        function stopListening() {
+            isListening = false;
+            document.getElementById('voiceBtn').classList.remove('recording');
+        }
+        
+        // 파일 업로드 처리
+        function setupFileUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const imagePreview = document.getElementById('imagePreview');
             
-            // 간단한 제목 생성 로직
-            const titles = [
-                `🔥 ${topic} 완벽 가이드 - 초보자도 쉽게!`,
-                `💯 ${topic} 꿀팁 대공개! 이것만 알면 끝!`,
-                `🚀 ${topic} 마스터 되는 법 - 10분만 투자하세요!`,
-                `⭐ ${topic} 전문가가 알려주는 비밀 노하우`,
-                `🎯 ${topic} 완전 정복! 따라만 하면 성공!`
+            uploadArea.addEventListener('click', () => fileInput.click());
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+        }
+        
+        function handleFile(file) {
+            const reader = new FileReader();
+            const imagePreview = document.getElementById('imagePreview');
+            
+            if (file.type.startsWith('image/')) {
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    analyzeImage(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                // 다른 파일 타입 처리
+                analyzeFile(file);
+            }
+        }
+        
+        function analyzeImage(imageSrc) {
+            const analysisResults = document.getElementById('analysisResults');
+            
+            // 실제로는 AI 모델로 분석하지만, 여기서는 시뮬레이션
+            const analysis = {
+                colors: ['#FF6B6B', '#4ECDC4', '#45B7D1'],
+                objects: ['person', 'background', 'lighting'],
+                style: 'modern',
+                quality: 'good',
+                improvements: [
+                    '색상 대비를 높여보세요',
+                    '구도를 더 역동적으로 만들어보세요',
+                    '조명을 더 밝게 조정해보세요'
+                ]
+            };
+            
+            analysisResults.innerHTML = `
+                <div class="analysis-result">
+                    <h4>🔍 이미지 자동 분석 결과</h4>
+                    <div class="analysis-item">
+                        <strong>주요 색상:</strong> ${analysis.colors.map(color => `<span style="background: ${color}; padding: 2px 8px; border-radius: 3px; color: white; margin: 0 2px;">${color}</span>`).join('')}
+                    </div>
+                    <div class="analysis-item">
+                        <strong>감지된 객체:</strong> ${analysis.objects.join(', ')}
+                    </div>
+                    <div class="analysis-item">
+                        <strong>스타일:</strong> ${analysis.style}
+                    </div>
+                    <div class="analysis-item">
+                        <strong>품질 평가:</strong> ${analysis.quality}
+                    </div>
+                </div>
+            `;
+            
+            // 자동으로 코치 피드백 생성
+            setTimeout(() => {
+                generateCoachFeedback(analysis);
+            }, 1000);
+            
+            // 히스토리에 추가
+            addToHistory('image_analysis', analysis);
+        }
+        
+        function analyzeFile(file) {
+            const analysisResults = document.getElementById('analysisResults');
+            
+            analysisResults.innerHTML = `
+                <div class="analysis-result">
+                    <h4>📄 파일 정보</h4>
+                    <div class="analysis-item">
+                        <strong>파일명:</strong> ${file.name}
+                    </div>
+                    <div class="analysis-item">
+                        <strong>크기:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB
+                    </div>
+                    <div class="analysis-item">
+                        <strong>타입:</strong> ${file.type || '알 수 없음'}
+                    </div>
+                </div>
+            `;
+            
+            addToHistory('file_upload', { name: file.name, size: file.size, type: file.type });
+        }
+        
+        function processInput() {
+            const userInput = document.getElementById('userInput').value;
+            if (!userInput.trim()) return;
+            
+            // 사용자 입력 분석
+            const analysis = analyzeUserInput(userInput);
+            
+            // 결과 표시
+            const analysisResults = document.getElementById('analysisResults');
+            analysisResults.innerHTML = `
+                <div class="analysis-result">
+                    <h4>💭 입력 분석 결과</h4>
+                    <div class="analysis-item">
+                        <strong>주제:</strong> ${analysis.topic}
+                    </div>
+                    <div class="analysis-item">
+                        <strong>의도:</strong> ${analysis.intent}
+                    </div>
+                    <div class="analysis-item">
+                        <strong>감정:</strong> ${analysis.emotion}
+                    </div>
+                </div>
+            `;
+            
+            // 코치 응답 생성
+            generateTextCoachResponse(userInput, analysis);
+            
+            // 히스토리에 추가
+            addToHistory('text_input', { input: userInput, analysis: analysis });
+            
+            // 입력창 초기화
+            document.getElementById('userInput').value = '';
+        }
+        
+        function analyzeUserInput(text) {
+            // 간단한 텍스트 분석 시뮬레이션
+            const keywords = {
+                '그림': 'art',
+                '색상': 'color',
+                '디자인': 'design',
+                '개선': 'improvement',
+                '도움': 'help',
+                '질문': 'question'
+            };
+            
+            let topic = 'general';
+            for (const [key, value] of Object.entries(keywords)) {
+                if (text.includes(key)) {
+                    topic = value;
+                    break;
+                }
+            }
+            
+            const intent = text.includes('?') ? 'question' : 
+                          text.includes('도와') ? 'help_request' : 
+                          text.includes('어떻게') ? 'how_to' : 'statement';
+            
+            const emotion = text.includes('좋') ? 'positive' :
+                           text.includes('나쁘') || text.includes('힘들') ? 'negative' : 'neutral';
+            
+            return { topic, intent, emotion };
+        }
+        
+        function generateCoachFeedback(analysis) {
+            const chatContainer = document.getElementById('chatContainer');
+            
+            const gptFeedback = `
+                <div class="message ai">
+                    <strong>GPT 코치:</strong> 분석 결과를 보니 정말 흥미로운 작품이네요! 🎨<br><br>
+                    <strong>강점:</strong><br>
+                    • 색상 선택이 조화롭습니다<br>
+                    • 전체적인 구성이 안정적이에요<br><br>
+                    <strong>개선 제안:</strong><br>
+                    • ${analysis.improvements ? analysis.improvements[0] : '더 대담한 색상 시도해보세요'}<br>
+                    • 세부 디테일을 더 풍부하게 만들어보세요
+                </div>
+            `;
+            
+            const claudeFeedback = `
+                <div class="message coach">
+                    <strong>Claude 코치:</strong> 훌륭한 작업입니다! 몇 가지 관찰사항을 공유드릴게요. 💡<br><br>
+                    <strong>기술적 분석:</strong><br>
+                    • 현재 스타일: ${analysis.style || 'modern'}<br>
+                    • 품질 수준: ${analysis.quality || 'good'}<br><br>
+                    <strong>다음 단계:</strong><br>
+                    • 다양한 기법을 실험해보세요<br>
+                    • 다른 스타일과 비교 분석해보는 것을 추천해요
+                </div>
+            `;
+            
+            chatContainer.innerHTML += gptFeedback + claudeFeedback;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // 학습 데이터 업데이트
+            updateLearningData('feedback_received', analysis);
+        }
+        
+        function generateTextCoachResponse(userInput, analysis) {
+            const chatContainer = document.getElementById('chatContainer');
+            
+            const userMessage = `
+                <div class="message user">
+                    <strong>나:</strong> ${userInput}
+                </div>
+            `;
+            
+            // 주제별 맞춤 응답
+            let response = '';
+            switch(analysis.topic) {
+                case 'art':
+                    response = '아트에 대한 질문이군요! 창의적인 표현에 대해 함께 이야기해봐요. 🎨';
+                    break;
+                case 'color':
+                    response = '색상 이론은 정말 흥미로운 주제에요! 색상의 심리적 효과와 조화에 대해 알려드릴게요. 🌈';
+                    break;
+                case 'improvement':
+                    response = '개선하려는 의지가 훌륭해요! 구체적으로 어떤 부분을 발전시키고 싶으신가요? 📈';
+                    break;
+                default:
+                    response = '흥미로운 질문이네요! 더 자세히 설명해주시면 구체적으로 도와드릴게요. 💭';
+            }
+            
+            const aiResponse = `
+                <div class="message ai">
+                    <strong>멀티 코치:</strong> ${response}<br><br>
+                    분석 결과, 당신의 ${analysis.intent === 'question' ? '궁금증' : '요청'}을 이해했어요. 
+                    ${analysis.emotion === 'positive' ? '긍정적인 에너지가 느껴져서 좋네요! ✨' : 
+                      analysis.emotion === 'negative' ? '어려움이 있으시군요. 함께 해결해봐요! 💪' : 
+                      '차근차근 도움드릴게요! 🤝'}
+                </div>
+            `;
+            
+            chatContainer.innerHTML += userMessage + aiResponse;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function getCoachFeedback() {
+            const userInput = document.getElementById('userInput').value;
+            if (!userInput.trim()) {
+                alert('먼저 질문이나 요청사항을 입력해주세요!');
+                return;
+            }
+            
+            processInput();
+            updateLearningData('coach_requested', userInput);
+        }
+        
+        function sendChatMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            const chatContainer = document.getElementById('chatContainer');
+            const userMessage = `
+                <div class="message user">
+                    <strong>나:</strong> ${message}
+                </div>
+            `;
+            
+            chatContainer.innerHTML += userMessage;
+            chatInput.value = '';
+            
+            // 타이핑 표시
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message ai typing-indicator';
+            typingDiv.innerHTML = '<strong>AI 코치들이 생각 중...</strong> 💭';
+            chatContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // 응답 생성
+            setTimeout(() => {
+                chatContainer.removeChild(typingDiv);
+                
+                const responses = [
+                    `정말 좋은 질문이에요! "${message}"에 대해 함께 생각해봐요. 이런 관점에서 접근해보는 건 어떨까요? 🤔`,
+                    `"${message}" - 흥미로운 주제네요! 제 경험상 이런 경우에는 단계별로 접근하는 것이 효과적이에요. 💡`,
+                    `훌륭한 아이디어입니다! "${message}"를 더 발전시키려면 이런 방법들을 시도해보세요. 구체적으로 어떤 부분이 궁금하신가요? 🚀`,
+                    `"${message}" - 이 주제에 대해 깊이 생각해보셨군요! 다양한 각도에서 분석해보면 새로운 인사이트를 얻을 수 있을 거예요. ✨`
+                ];
+                
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                
+                const aiResponse = `
+                    <div class="message ai">
+                        <strong>GPT 코치:</strong> ${randomResponse}
+                    </div>
+                    <div class="message coach">
+                        <strong>Claude 코치:</strong> 추가로 말씀드리면, 이런 상황에서는 실습과 이론을 병행하는 것이 중요해요. 직접 해보면서 배우는 경험이 가장 값진 학습이 됩니다! 📚
+                    </div>
+                `;
+                
+                chatContainer.innerHTML += aiResponse;
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                updateLearningData('chat_interaction', message);
+            }, 2000);
+        }
+        
+        function switchTab(tabName) {
+            // 모든 탭 비활성화
+            document.querySelectorAll('.coach-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.coach-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 선택된 탭 활성화
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}Content`).classList.add('active');
+            
+            if (tabName === 'progress') {
+                updateProgressDisplay();
+            } else if (tabName === 'analysis') {
+                updateHistoryDisplay();
+            }
+        }
+        
+        function updateLearningData(type, data) {
+            learningData.sessions++;
+            
+            switch(type) {
+                case 'feedback_received':
+                    learningData.feedbacks.push({
+                        timestamp: new Date(),
+                        type: 'auto_analysis',
+                        data: data
+                    });
+                    break;
+                case 'coach_requested':
+                    learningData.feedbacks.push({
+                        timestamp: new Date(),
+                        type: 'manual_request',
+                        data: data
+                    });
+                    break;
+                case 'chat_interaction':
+                    learningData.feedbacks.push({
+                        timestamp: new Date(),
+                        type: 'chat',
+                        data: data
+                    });
+                    break;
+            }
+            
+            // 향상도 계산 (세션 수에 따라 증가)
+            const improvementScore = Math.min(95, Math.floor(learningData.sessions * 3.5));
+            learningData.improvementScore = improvementScore;
+            
+            // 스킬 레벨 업데이트
+            if (learningData.sessions > 20) {
+                learningData.skillLevel = '고급';
+            } else if (learningData.sessions > 10) {
+                learningData.skillLevel = '중급';
+            } else if (learningData.sessions > 5) {
+                learningData.skillLevel = '초중급';
+            } else {
+                learningData.skillLevel = '초급';
+            }
+            
+            // 로컬 스토리지에 저장 (자가 학습 데이터 보존)
+            try {
+                localStorage.setItem('learningData', JSON.stringify(learningData));
+            } catch(e) {
+                console.log('로컬 저장 실패, 메모리에만 보관');
+            }
+        }
+        
+        function updateProgressDisplay() {
+            document.getElementById('sessionCount').textContent = learningData.sessions;
+            document.getElementById('improvementScore').textContent = learningData.improvementScore + '%';
+            document.getElementById('feedbackCount').textContent = learningData.feedbacks.length;
+            document.getElementById('skillLevel').textContent = learningData.skillLevel;
+            
+            // 진도 바 업데이트
+            const progressPercent = Math.min(100, learningData.sessions * 2);
+            document.getElementById('overallProgress').style.width = progressPercent + '%';
+            
+            // 스킬 진도 업데이트 (랜덤하게 발전)
+            if (learningData.sessions % 3 === 0) {
+                Object.keys(learningData.skillProgress).forEach(skill => {
+                    if (Math.random() > 0.7 && learningData.skillProgress[skill] < 5) {
+                        learningData.skillProgress[skill]++;
+                    }
+                });
+            }
+        }
+        
+        function addToHistory(type, data) {
+            learningData.analysisHistory.unshift({
+                timestamp: new Date(),
+                type: type,
+                data: data
+            });
+            
+            // 최대 50개 항목만 보관
+            if (learningData.analysisHistory.length > 50) {
+                learningData.analysisHistory = learningData.analysisHistory.slice(0, 50);
+            }
+        }
+        
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('historyList');
+            
+            if (learningData.analysisHistory.length === 0) {
+                historyList.innerHTML = '<p>아직 분석 기록이 없습니다. 파일을 업로드하거나 질문을 해보세요!</p>';
+                return;
+            }
+            
+            historyList.innerHTML = learningData.analysisHistory.map((item, index) => {
+                const timeStr = item.timestamp.toLocaleString();
+                let content = '';
+                
+                switch(item.type) {
+                    case 'image_analysis':
+                        content = `🖼️ 이미지 분석 - 스타일: ${item.data.style}, 품질: ${item.data.quality}`;
+                        break;
+                    case 'text_input':
+                        content = `💭 텍스트 분석 - "${item.data.input.substring(0, 30)}..."`;
+                        break;
+                    case 'file_upload':
+                        content = `📁 파일 업로드 - ${item.data.name}`;
+                        break;
+                    default:
+                        content = `📝 기타 활동 - ${JSON.stringify(item.data).substring(0, 50)}...`;
+                }
+                
+                return `
+                    <div class="analysis-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>${content}</span>
+                            <small style="color: #666;">${timeStr}</small>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function clearWorkspace() {
+            document.getElementById('userInput').value = '';
+            document.getElementById('analysisResults').innerHTML = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+        }
+        
+        function loadSavedData() {
+            try {
+                const savedData = localStorage.getItem('learningData');
+                if (savedData) {
+                    const parsed = JSON.parse(savedData);
+                    // 기존 구조와 병합
+                    learningData = { ...learningData, ...parsed };
+                    
+                    // 날짜 객체 복원
+                    learningData.feedbacks.forEach(feedback => {
+                        feedback.timestamp = new Date(feedback.timestamp);
+                    });
+                    learningData.analysisHistory.forEach(item => {
+                        item.timestamp = new Date(item.timestamp);
+                    });
+                }
+            } catch(e) {
+                console.log('저장된 데이터 로드 실패, 새로 시작');
+            }
+        }
+        
+        // 자동 학습 및 개선 제안
+        function generateAutoImprovement() {
+            const sessionCount = learningData.sessions;
+            const recentActivities = learningData.analysisHistory.slice(0, 5);
+            
+            if (sessionCount > 0 && sessionCount % 5 === 0) {
+                const chatContainer = document.getElementById('chatContainer');
+                
+                const autoSuggestion = `
+                    <div class="message coach">
+                        <strong>🤖 자동 학습 분석:</strong> ${sessionCount}번의 세션을 완료하셨네요! 🎉<br><br>
+                        <strong>발견된 패턴:</strong><br>
+                        • 주로 ${getMainActivityType()}에 관심이 많으시군요<br>
+                        • 학습 속도가 ${getLearningSpeed()}입니다<br><br>
+                        <strong>다음 단계 제안:</strong><br>
+                        • ${getNextStepSuggestion()}<br>
+                        • 새로운 도전을 시도해보세요!
+                    </div>
+                `;
+                
+                chatContainer.innerHTML += autoSuggestion;
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+        
+        function getMainActivityType() {
+            const types = learningData.analysisHistory.map(item => item.type);
+            const counts = {};
+            types.forEach(type => counts[type] = (counts[type] || 0) + 1);
+            
+            const main = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b, 'general');
+            
+            switch(main) {
+                case 'image_analysis': return '이미지 분석';
+                case 'text_input': return '텍스트 질문';
+                case 'file_upload': return '파일 작업';
+                default: return '종합적인 학습';
+            }
+        }
+        
+        function getLearningSpeed() {
+            const speed = learningData.sessions / Math.max(1, learningData.analysisHistory.length);
+            return speed > 0.8 ? '매우 빠름 🚀' : speed > 0.5 ? '보통 📈' : '신중함 🤔';
+        }
+        
+        function getNextStepSuggestion() {
+            const suggestions = [
+                '더 복잡한 프로젝트에 도전해보세요',
+                '다른 스타일이나 기법을 실험해보세요',
+                '협업 프로젝트를 시작해보세요',
+                '포트폴리오를 정리해보세요',
+                '새로운 도구나 소프트웨어를 배워보세요'
             ];
             
-            const randomTitle = titles[Math.floor(Math.random() * titles.length)];
-            showResult(`<h3>생성된 제목:</h3><p><strong>${randomTitle}</strong></p>`);
+            return suggestions[Math.floor(Math.random() * suggestions.length)];
         }
         
-        // 설명 생성
-        function generateDescription() {
-            const topic = document.getElementById('topic').value;
-            if (!topic) {
-                showStatus('주제를 입력해주세요!', 'error');
-                return;
-            }
-            
-            showStatus('설명 생성 중...');
-            
-            const description = `
-🎥 ${topic}에 대한 완벽한 가이드를 준비했습니다!
-
-✨ 이 영상에서 다룰 내용:
-• ${topic}의 기본 개념과 핵심 포인트
-• 실전에서 바로 적용할 수 있는 실용적인 팁
-• 초보자도 쉽게 따라할 수 있는 단계별 설명
-• 자주 묻는 질문들과 해답
-
-🔥 ${topic}을 완전히 마스터하고 싶다면 끝까지 시청해주세요!
-
-👍 도움이 되었다면 좋아요와 구독 부탁드립니다!
-🔔 알림 설정하고 새로운 영상 소식을 받아보세요!
-
-#${topic} #가이드 #꿀팁 #초보자 #튜토리얼
-            `;
-            
-            showResult(`<h3>생성된 설명:</h3><pre>${description}</pre>`);
-        }
-        
-        // 태그 생성
-        function generateTags() {
-            const topic = document.getElementById('topic').value;
-            if (!topic) {
-                showStatus('주제를 입력해주세요!', 'error');
-                return;
-            }
-            
-            showStatus('태그 생성 중...');
-            
-            const baseTags = ['가이드', '꿀팁', '초보자', '튜토리얼', '완전정복', '마스터', '비법'];
-            const tags = [topic, ...baseTags.slice(0, 6)];
-            
-            showResult(`<h3>생성된 태그:</h3><p>${tags.map(tag => `#${tag}`).join(' ')}</p>`);
-        }
-        
-        // 스크립트 생성
-        function generateScript() {
-            const topic = document.getElementById('topic').value;
-            if (!topic) {
-                showStatus('주제를 입력해주세요!', 'error');
-                return;
-            }
-            
-            showStatus('스크립트 생성 중...');
-            
-            const script = `
-🎬 ${topic} 영상 스크립트
-
-【인트로 - 0:00~0:30】
-안녕하세요! 오늘은 ${topic}에 대해 알아보겠습니다.
-이 영상 하나로 ${topic}을 완전히 마스터할 수 있을 거예요!
-
-【본론 1 - 0:30~2:00】
-먼저 ${topic}의 기본 개념부터 설명드릴게요.
-${topic}이란 무엇인지, 왜 중요한지 함께 알아보죠.
-
-【본론 2 - 2:00~4:00】
-이제 실전 팁을 공유해드릴게요.
-이 방법들을 따라하시면 분명 도움이 될 거예요.
-
-【본론 3 - 4:00~6:00】
-자주 묻는 질문들과 해답을 정리했습니다.
-궁금했던 점들이 해결되실 거예요.
-
-【마무리 - 6:00~7:00】
-오늘 ${topic}에 대해 알아봤는데 어떠셨나요?
-도움이 되었다면 좋아요와 구독 부탁드려요!
-            `;
-            
-            showResult(`<h3>생성된 스크립트:</h3><pre>${script}</pre>`);
-        }
-        
-        // 사용자 입력 처리
-        function processCustomInput() {
-            const input = document.getElementById('customInput').value;
-            if (!input) {
-                showStatus('내용을 입력해주세요!', 'error');
-                return;
-            }
-            
-            showStatus('처리 중...');
-            
-            // 간단한 키워드 기반 응답
-            let response = '';
-            
-            if (input.includes('제목') || input.includes('title')) {
-                response = '🎯 매력적인 제목 만들기 팁:\n• 숫자 사용하기 (5가지, 10분)\n• 감정 표현하기 (놀라운, 충격적인)\n• 호기심 유발하기 (비밀, 진실)\n• 이모지 활용하기 🔥⭐💯';
-            } else if (input.includes('조회수') || input.includes('views')) {
-                response = '📈 조회수 늘리기 방법:\n• 첫 24시간이 중요해요\n• 썸네일을 눈에 띄게 만드세요\n• 제목에 검색 키워드 포함\n• 적절한 시간대에 업로드';
-            } else if (input.includes('썸네일') || input.includes('thumbnail')) {
-                response = '🎨 썸네일 제작 팁:\n• 밝고 선명한 색상 사용\n• 큰 글씨로 핵심 메시지 전달\n• 얼굴 표정 활용\n• 대비 효과 활용';
-            } else {
-                response = `✨ "${input}"에 대한 조언:\n\n• 일관성 있게 콘텐츠 업로드하기\n• 시청자와 소통하기\n• 트렌드 파악하고 활용하기\n• 고유한 스타일 만들기\n• 인내심 갖고 꾸준히 하기`;
-            }
-            
-            showResult(`<h3>AI 조언:</h3><p style="white-space: pre-line;">${response}</p>`);
-        }
-        
-        // 초기화
-        function clearAll() {
-            document.getElementById('topic').value = '';
-            document.getElementById('customInput').value = '';
-            document.getElementById('result').classList.add('hidden');
-            document.getElementById('status').classList.add('hidden');
-            showStatus('초기화 완료!');
-        }
-        
-        // 엔터키 처리
-        document.getElementById('topic').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                generateTitle();
+        // 키보드 단축키
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                processInput();
+            } else if (e.key === 'Enter' && e.target.id === 'chatInput') {
+                sendChatMessage();
             }
         });
         
-        document.getElementById('customInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && e.ctrlKey) {
-                processCustomInput();
-            }
-        });
-        
-        // 페이지 로드 시 환영 메시지
+        // 페이지 로드 시 초기화
         window.addEventListener('load', function() {
-            showStatus('YouTube 도우미에 오신 것을 환영합니다! 🎉');
+            setupFileUpload();
+            initSpeechRecognition();
+            loadSavedData();
+            
+            // 환영 메시지와 함께 시작
+            setTimeout(() => {
+                updateProgressDisplay();
+                
+                // 정기적으로 자동 개선 제안
+                setInterval(generateAutoImprovement, 30000); // 30초마다 체크
+            }, 1000);
+        });
+        
+        // 이벤트 리스너 설정
+        document.getElementById('voiceBtn').addEventListener('click', toggleVoice);
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                processInput();
+            }
+        });
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendChatMessage();
+            }
         });
     </script>
 </body>
