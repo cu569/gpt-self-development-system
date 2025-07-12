@@ -1,1075 +1,917 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자가학습 AI 코치</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            height: 100vh;
-        }
-        
-        .panel {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .panel h2 {
-            margin-bottom: 20px;
-            color: #333;
-            text-align: center;
-            font-size: 1.5em;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }
-        
-        /* 왼쪽 패널 - 실습/작업 영역 */
-        .workspace {
-            position: relative;
-        }
-        
-        .upload-area {
-            border: 3px dashed #667eea;
-            border-radius: 10px;
-            padding: 40px;
-            text-align: center;
-            margin-bottom: 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .upload-area:hover {
-            border-color: #764ba2;
-            background: #f8f9fa;
-        }
-        
-        .upload-area.dragover {
-            border-color: #28a745;
-            background: #e8f5e8;
-        }
-        
-        #imagePreview {
-            max-width: 100%;
-            max-height: 300px;
-            border-radius: 10px;
-            margin: 10px 0;
-            display: none;
-        }
-        
-        .analysis-result {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 10px 0;
-            border-left: 4px solid #17a2b8;
-        }
-        
-        .user-input {
-            margin-top: 20px;
-        }
-        
-        .user-input textarea {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            resize: vertical;
-            min-height: 80px;
-            font-size: 16px;
-        }
-        
-        .user-input textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        /* 오른쪽 패널 - 코치 영역 */
-        .coach-panel {
-            position: relative;
-        }
-        
-        .coach-tabs {
-            display: flex;
-            margin-bottom: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 5px;
-        }
-        
-        .coach-tab {
-            flex: 1;
-            padding: 10px 15px;
-            background: none;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: bold;
-        }
-        
-        .coach-tab.active {
-            background: #667eea;
-            color: white;
-        }
-        
-        .coach-content {
-            flex: 1;
-            overflow-y: auto;
-            display: none;
-        }
-        
-        .coach-content.active {
-            display: block;
-        }
-        
-        .chat-container {
-            height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 15px;
-            background: #fafafa;
-            margin-bottom: 15px;
-        }
-        
-        .message {
-            margin-bottom: 15px;
-            padding: 12px;
-            border-radius: 10px;
-            max-width: 80%;
-            line-height: 1.5;
-        }
-        
-        .message.user {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            margin-left: auto;
-            text-align: right;
-        }
-        
-        .message.ai {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-        }
-        
-        .message.coach {
-            background: #fff3e0;
-            border-left: 4px solid #ff9800;
-        }
-        
-        .learning-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .stat-card {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-        }
-        
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            display: block;
-        }
-        
-        .progress-section {
-            margin: 20px 0;
-        }
-        
-        .progress-bar {
-            background: #e9ecef;
-            border-radius: 10px;
-            height: 20px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-        
-        .progress-fill {
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            height: 100%;
-            transition: width 0.5s ease;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        
-        .analysis-item {
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 12px;
-            margin: 8px 0;
-            border-left: 4px solid #667eea;
-        }
-        
-        .coach-suggestion {
-            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
-            border-left: 4px solid #ff9800;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-        
-        .typing-indicator {
-            color: #666;
-            font-style: italic;
-            animation: dots 1.5s infinite;
-        }
-        
-        @keyframes dots {
-            0%, 20% { opacity: 0; }
-            40% { opacity: 0.5; }
-            60% { opacity: 1; }
-            80%, 100% { opacity: 0.5; }
-        }
-        
-        .voice-controls {
-            display: flex;
-            gap: 10px;
-            margin: 10px 0;
-        }
-        
-        .voice-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-        
-        .voice-btn.recording {
-            background: #ff0000;
-            animation: pulse 1s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-                height: auto;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- 왼쪽 패널: 실습/작업 영역 -->
-        <div class="panel workspace">
-            <h2>🎨 실습 작업 영역</h2>
-            
-            <div class="upload-area" id="uploadArea">
-                <div>
-                    <p>📁 파일을 드래그하거나 클릭하여 업로드</p>
-                    <p>이미지, 문서, 오디오 파일 지원</p>
-                </div>
-                <input type="file" id="fileInput" style="display: none;" accept="image/*,audio/*,.txt,.pdf,.docx">
-                <img id="imagePreview" alt="업로드된 이미지">
-            </div>
-            
-            <div id="analysisResults"></div>
-            
-            <div class="user-input">
-                <div class="voice-controls">
-                    <button class="voice-btn" id="voiceBtn" title="음성 입력">🎤</button>
-                    <button class="btn btn-secondary" onclick="clearWorkspace()">🗑️ 초기화</button>
-                </div>
-                <textarea id="userInput" placeholder="작업에 대한 질문이나 요청사항을 입력하세요..."></textarea>
-                <div class="action-buttons">
-                    <button class="btn btn-primary" onclick="processInput()">💬 분석 요청</button>
-                    <button class="btn btn-success" onclick="getCoachFeedback()">🎯 코치 조언</button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 오른쪽 패널: AI 코치 영역 -->
-        <div class="panel coach-panel">
-            <h2>🤖 AI 멀티 코치</h2>
-            
-            <div class="coach-tabs">
-                <button class="coach-tab active" onclick="switchTab('chat')">💬 실시간 코치</button>
-                <button class="coach-tab" onclick="switchTab('progress')">📊 학습 진도</button>
-                <button class="coach-tab" onclick="switchTab('analysis')">🔍 분석 히스토리</button>
-            </div>
-            
-            <!-- 실시간 코치 채팅 -->
-            <div class="coach-content active" id="chatContent">
-                <div class="chat-container" id="chatContainer">
-                    <div class="message ai">
-                        <strong>GPT 코치:</strong> 안녕하세요! 저는 여러분의 학습을 도와드리는 AI 코치입니다. 🚀<br><br>
-                        <strong>Claude 코치:</strong> 함께 작업하며 실시간으로 피드백을 드릴게요! 💡<br><br>
-                        무엇이든 업로드하거나 질문해보세요!
-                    </div>
-                </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <input type="text" id="chatInput" placeholder="코치에게 질문하세요..." style="flex: 1; padding: 10px; border: 2px solid #ddd; border-radius: 8px;">
-                    <button class="btn btn-primary" onclick="sendChatMessage()">전송</button>
-                </div>
-            </div>
-            
-            <!-- 학습 진도 -->
-            <div class="coach-content" id="progressContent">
-                <div class="learning-stats">
-                    <div class="stat-card">
-                        <span class="stat-number" id="sessionCount">0</span>
-                        <span>학습 세션</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-number" id="improvementScore">0%</span>
-                        <span>향상도</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-number" id="feedbackCount">0</span>
-                        <span>받은 피드백</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-number" id="skillLevel">초급</span>
-                        <span>현재 레벨</span>
-                    </div>
-                </div>
-                
-                <div class="progress-section">
-                    <h4>📈 전체 학습 진도</h4>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="overallProgress" style="width: 15%"></div>
-                    </div>
-                    <p>15% - 기초 단계를 마스터하고 있어요!</p>
-                    
-                    <h4>🎯 주요 스킬 발전도</h4>
-                    <div style="margin: 10px 0;">
-                        <p>창의성: <span style="float: right;">⭐⭐⭐☆☆</span></p>
-                        <p>분석력: <span style="float: right;">⭐⭐☆☆☆</span></p>
-                        <p>실행력: <span style="float: right;">⭐⭐⭐⭐☆</span></p>
-                    </div>
-                </div>
-                
-                <div class="coach-suggestion">
-                    <h4>💡 다음 단계 추천</h4>
-                    <p>• 더 복잡한 프로젝트에 도전해보세요</p>
-                    <p>• 다양한 스타일의 작업을 시도해보세요</p>
-                    <p>• 피드백을 바탕으로 개선점을 적용해보세요</p>
-                </div>
-            </div>
-            
-            <!-- 분석 히스토리 -->
-            <div class="coach-content" id="analysisContent">
-                <div id="historyList">
-                    <p>아직 분석 기록이 없습니다. 파일을 업로드하거나 질문을 해보세요!</p>
-                </div>
-            </div>
-        </div>
-    </div>
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  Cpu, 
+  Users, 
+  Database, 
+  Wifi, 
+  WifiOff, 
+  Plus, 
+  MessageCircle, 
+  Settings, 
+  Download,
+  Upload,
+  Zap,
+  Globe,
+  Shield,
+  Brain,
+  Sparkles,
+  ChevronRight,
+  Play,
+  Pause,
+  RotateCcw,
+  TrendingUp,
+  Heart,
+  Share2,
+  Copy,
+  Check,
+  Activity,
+  Eye,
+  ThumbsUp,
+  Star,
+  Clock,
+  Send
+} from 'lucide-react';
 
-    <script>
-        // 전역 변수
-        let learningData = {
-            sessions: 0,
-            feedbacks: [],
-            improvements: [],
-            analysisHistory: [],
-            userPreferences: {},
-            skillProgress: {
-                creativity: 3,
-                analysis: 2,
-                execution: 4
-            }
-        };
-        
-        let isListening = false;
-        let recognition = null;
-        
-        // 음성 인식 초기화
-        function initSpeechRecognition() {
-            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                recognition.lang = 'ko-KR';
-                recognition.continuous = false;
-                recognition.interimResults = false;
-                
-                recognition.onstart = function() {
-                    isListening = true;
-                    document.getElementById('voiceBtn').classList.add('recording');
-                };
-                
-                recognition.onresult = function(event) {
-                    const result = event.results[0][0].transcript;
-                    document.getElementById('userInput').value = result;
-                    processInput();
-                };
-                
-                recognition.onerror = function(event) {
-                    console.error('Speech recognition error:', event.error);
-                    stopListening();
-                };
-                
-                recognition.onend = function() {
-                    stopListening();
-                };
-                
-                return true;
-            }
-            return false;
-        }
-        
-        function toggleVoice() {
-            if (!recognition) {
-                alert('음성 인식을 지원하지 않는 브라우저입니다.');
-                return;
-            }
-            
-            if (isListening) {
-                recognition.stop();
-            } else {
-                recognition.start();
-            }
-        }
-        
-        function stopListening() {
-            isListening = false;
-            document.getElementById('voiceBtn').classList.remove('recording');
-        }
-        
-        // 파일 업로드 처리
-        function setupFileUpload() {
-            const uploadArea = document.getElementById('uploadArea');
-            const fileInput = document.getElementById('fileInput');
-            const imagePreview = document.getElementById('imagePreview');
-            
-            uploadArea.addEventListener('click', () => fileInput.click());
-            
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.classList.add('dragover');
-            });
-            
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.classList.remove('dragover');
-            });
-            
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.classList.remove('dragover');
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    handleFile(files[0]);
-                }
-            });
-            
-            fileInput.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    handleFile(e.target.files[0]);
-                }
-            });
-        }
-        
-        function handleFile(file) {
-            const reader = new FileReader();
-            const imagePreview = document.getElementById('imagePreview');
-            
-            if (file.type.startsWith('image/')) {
-                reader.onload = function(e) {
-                    imagePreview.src = e.target.result;
-                    imagePreview.style.display = 'block';
-                    analyzeImage(e.target.result);
-                };
-                reader.readAsDataURL(file);
-            } else {
-                // 다른 파일 타입 처리
-                analyzeFile(file);
-            }
-        }
-        
-        function analyzeImage(imageSrc) {
-            const analysisResults = document.getElementById('analysisResults');
-            
-            // 실제로는 AI 모델로 분석하지만, 여기서는 시뮬레이션
-            const analysis = {
-                colors: ['#FF6B6B', '#4ECDC4', '#45B7D1'],
-                objects: ['person', 'background', 'lighting'],
-                style: 'modern',
-                quality: 'good',
-                improvements: [
-                    '색상 대비를 높여보세요',
-                    '구도를 더 역동적으로 만들어보세요',
-                    '조명을 더 밝게 조정해보세요'
-                ]
-            };
-            
-            analysisResults.innerHTML = `
-                <div class="analysis-result">
-                    <h4>🔍 이미지 자동 분석 결과</h4>
-                    <div class="analysis-item">
-                        <strong>주요 색상:</strong> ${analysis.colors.map(color => `<span style="background: ${color}; padding: 2px 8px; border-radius: 3px; color: white; margin: 0 2px;">${color}</span>`).join('')}
-                    </div>
-                    <div class="analysis-item">
-                        <strong>감지된 객체:</strong> ${analysis.objects.join(', ')}
-                    </div>
-                    <div class="analysis-item">
-                        <strong>스타일:</strong> ${analysis.style}
-                    </div>
-                    <div class="analysis-item">
-                        <strong>품질 평가:</strong> ${analysis.quality}
-                    </div>
-                </div>
-            `;
-            
-            // 자동으로 코치 피드백 생성
-            setTimeout(() => {
-                generateCoachFeedback(analysis);
-            }, 1000);
-            
-            // 히스토리에 추가
-            addToHistory('image_analysis', analysis);
-        }
-        
-        function analyzeFile(file) {
-            const analysisResults = document.getElementById('analysisResults');
-            
-            analysisResults.innerHTML = `
-                <div class="analysis-result">
-                    <h4>📄 파일 정보</h4>
-                    <div class="analysis-item">
-                        <strong>파일명:</strong> ${file.name}
-                    </div>
-                    <div class="analysis-item">
-                        <strong>크기:</strong> ${(file.size / 1024 / 1024).toFixed(2)} MB
-                    </div>
-                    <div class="analysis-item">
-                        <strong>타입:</strong> ${file.type || '알 수 없음'}
-                    </div>
-                </div>
-            `;
-            
-            addToHistory('file_upload', { name: file.name, size: file.size, type: file.type });
-        }
-        
-        function processInput() {
-            const userInput = document.getElementById('userInput').value;
-            if (!userInput.trim()) return;
-            
-            // 사용자 입력 분석
-            const analysis = analyzeUserInput(userInput);
-            
-            // 결과 표시
-            const analysisResults = document.getElementById('analysisResults');
-            analysisResults.innerHTML = `
-                <div class="analysis-result">
-                    <h4>💭 입력 분석 결과</h4>
-                    <div class="analysis-item">
-                        <strong>주제:</strong> ${analysis.topic}
-                    </div>
-                    <div class="analysis-item">
-                        <strong>의도:</strong> ${analysis.intent}
-                    </div>
-                    <div class="analysis-item">
-                        <strong>감정:</strong> ${analysis.emotion}
-                    </div>
-                </div>
-            `;
-            
-            // 코치 응답 생성
-            generateTextCoachResponse(userInput, analysis);
-            
-            // 히스토리에 추가
-            addToHistory('text_input', { input: userInput, analysis: analysis });
-            
-            // 입력창 초기화
-            document.getElementById('userInput').value = '';
-        }
-        
-        function analyzeUserInput(text) {
-            // 간단한 텍스트 분석 시뮬레이션
-            const keywords = {
-                '그림': 'art',
-                '색상': 'color',
-                '디자인': 'design',
-                '개선': 'improvement',
-                '도움': 'help',
-                '질문': 'question'
-            };
-            
-            let topic = 'general';
-            for (const [key, value] of Object.entries(keywords)) {
-                if (text.includes(key)) {
-                    topic = value;
-                    break;
-                }
-            }
-            
-            const intent = text.includes('?') ? 'question' : 
-                          text.includes('도와') ? 'help_request' : 
-                          text.includes('어떻게') ? 'how_to' : 'statement';
-            
-            const emotion = text.includes('좋') ? 'positive' :
-                           text.includes('나쁘') || text.includes('힘들') ? 'negative' : 'neutral';
-            
-            return { topic, intent, emotion };
-        }
-        
-        function generateCoachFeedback(analysis) {
-            const chatContainer = document.getElementById('chatContainer');
-            
-            const gptFeedback = `
-                <div class="message ai">
-                    <strong>GPT 코치:</strong> 분석 결과를 보니 정말 흥미로운 작품이네요! 🎨<br><br>
-                    <strong>강점:</strong><br>
-                    • 색상 선택이 조화롭습니다<br>
-                    • 전체적인 구성이 안정적이에요<br><br>
-                    <strong>개선 제안:</strong><br>
-                    • ${analysis.improvements ? analysis.improvements[0] : '더 대담한 색상 시도해보세요'}<br>
-                    • 세부 디테일을 더 풍부하게 만들어보세요
-                </div>
-            `;
-            
-            const claudeFeedback = `
-                <div class="message coach">
-                    <strong>Claude 코치:</strong> 훌륭한 작업입니다! 몇 가지 관찰사항을 공유드릴게요. 💡<br><br>
-                    <strong>기술적 분석:</strong><br>
-                    • 현재 스타일: ${analysis.style || 'modern'}<br>
-                    • 품질 수준: ${analysis.quality || 'good'}<br><br>
-                    <strong>다음 단계:</strong><br>
-                    • 다양한 기법을 실험해보세요<br>
-                    • 다른 스타일과 비교 분석해보는 것을 추천해요
-                </div>
-            `;
-            
-            chatContainer.innerHTML += gptFeedback + claudeFeedback;
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            
-            // 학습 데이터 업데이트
-            updateLearningData('feedback_received', analysis);
-        }
-        
-        function generateTextCoachResponse(userInput, analysis) {
-            const chatContainer = document.getElementById('chatContainer');
-            
-            const userMessage = `
-                <div class="message user">
-                    <strong>나:</strong> ${userInput}
-                </div>
-            `;
-            
-            // 주제별 맞춤 응답
-            let response = '';
-            switch(analysis.topic) {
-                case 'art':
-                    response = '아트에 대한 질문이군요! 창의적인 표현에 대해 함께 이야기해봐요. 🎨';
-                    break;
-                case 'color':
-                    response = '색상 이론은 정말 흥미로운 주제에요! 색상의 심리적 효과와 조화에 대해 알려드릴게요. 🌈';
-                    break;
-                case 'improvement':
-                    response = '개선하려는 의지가 훌륭해요! 구체적으로 어떤 부분을 발전시키고 싶으신가요? 📈';
-                    break;
-                default:
-                    response = '흥미로운 질문이네요! 더 자세히 설명해주시면 구체적으로 도와드릴게요. 💭';
-            }
-            
-            const aiResponse = `
-                <div class="message ai">
-                    <strong>멀티 코치:</strong> ${response}<br><br>
-                    분석 결과, 당신의 ${analysis.intent === 'question' ? '궁금증' : '요청'}을 이해했어요. 
-                    ${analysis.emotion === 'positive' ? '긍정적인 에너지가 느껴져서 좋네요! ✨' : 
-                      analysis.emotion === 'negative' ? '어려움이 있으시군요. 함께 해결해봐요! 💪' : 
-                      '차근차근 도움드릴게요! 🤝'}
-                </div>
-            `;
-            
-            chatContainer.innerHTML += userMessage + aiResponse;
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-        
-        function getCoachFeedback() {
-            const userInput = document.getElementById('userInput').value;
-            if (!userInput.trim()) {
-                alert('먼저 질문이나 요청사항을 입력해주세요!');
-                return;
-            }
-            
-            processInput();
-            updateLearningData('coach_requested', userInput);
-        }
-        
-        function sendChatMessage() {
-            const chatInput = document.getElementById('chatInput');
-            const message = chatInput.value.trim();
-            if (!message) return;
-            
-            const chatContainer = document.getElementById('chatContainer');
-            const userMessage = `
-                <div class="message user">
-                    <strong>나:</strong> ${message}
-                </div>
-            `;
-            
-            chatContainer.innerHTML += userMessage;
-            chatInput.value = '';
-            
-            // 타이핑 표시
-            const typingDiv = document.createElement('div');
-            typingDiv.className = 'message ai typing-indicator';
-            typingDiv.innerHTML = '<strong>AI 코치들이 생각 중...</strong> 💭';
-            chatContainer.appendChild(typingDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            
-            // 응답 생성
-            setTimeout(() => {
-                chatContainer.removeChild(typingDiv);
-                
-                const responses = [
-                    `정말 좋은 질문이에요! "${message}"에 대해 함께 생각해봐요. 이런 관점에서 접근해보는 건 어떨까요? 🤔`,
-                    `"${message}" - 흥미로운 주제네요! 제 경험상 이런 경우에는 단계별로 접근하는 것이 효과적이에요. 💡`,
-                    `훌륭한 아이디어입니다! "${message}"를 더 발전시키려면 이런 방법들을 시도해보세요. 구체적으로 어떤 부분이 궁금하신가요? 🚀`,
-                    `"${message}" - 이 주제에 대해 깊이 생각해보셨군요! 다양한 각도에서 분석해보면 새로운 인사이트를 얻을 수 있을 거예요. ✨`
-                ];
-                
-                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                
-                const aiResponse = `
-                    <div class="message ai">
-                        <strong>GPT 코치:</strong> ${randomResponse}
-                    </div>
-                    <div class="message coach">
-                        <strong>Claude 코치:</strong> 추가로 말씀드리면, 이런 상황에서는 실습과 이론을 병행하는 것이 중요해요. 직접 해보면서 배우는 경험이 가장 값진 학습이 됩니다! 📚
-                    </div>
-                `;
-                
-                chatContainer.innerHTML += aiResponse;
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-                
-                updateLearningData('chat_interaction', message);
-            }, 2000);
-        }
-        
-        function switchTab(tabName) {
-            // 모든 탭 비활성화
-            document.querySelectorAll('.coach-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.coach-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            // 선택된 탭 활성화
-            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
-            document.getElementById(`${tabName}Content`).classList.add('active');
-            
-            if (tabName === 'progress') {
-                updateProgressDisplay();
-            } else if (tabName === 'analysis') {
-                updateHistoryDisplay();
-            }
-        }
-        
-        function updateLearningData(type, data) {
-            learningData.sessions++;
-            
-            switch(type) {
-                case 'feedback_received':
-                    learningData.feedbacks.push({
-                        timestamp: new Date(),
-                        type: 'auto_analysis',
-                        data: data
-                    });
-                    break;
-                case 'coach_requested':
-                    learningData.feedbacks.push({
-                        timestamp: new Date(),
-                        type: 'manual_request',
-                        data: data
-                    });
-                    break;
-                case 'chat_interaction':
-                    learningData.feedbacks.push({
-                        timestamp: new Date(),
-                        type: 'chat',
-                        data: data
-                    });
-                    break;
-            }
-            
-            // 향상도 계산 (세션 수에 따라 증가)
-            const improvementScore = Math.min(95, Math.floor(learningData.sessions * 3.5));
-            learningData.improvementScore = improvementScore;
-            
-            // 스킬 레벨 업데이트
-            if (learningData.sessions > 20) {
-                learningData.skillLevel = '고급';
-            } else if (learningData.sessions > 10) {
-                learningData.skillLevel = '중급';
-            } else if (learningData.sessions > 5) {
-                learningData.skillLevel = '초중급';
-            } else {
-                learningData.skillLevel = '초급';
-            }
-            
-            // 로컬 스토리지에 저장 (자가 학습 데이터 보존)
-            try {
-                localStorage.setItem('learningData', JSON.stringify(learningData));
-            } catch(e) {
-                console.log('로컬 저장 실패, 메모리에만 보관');
-            }
-        }
-        
-        function updateProgressDisplay() {
-            document.getElementById('sessionCount').textContent = learningData.sessions;
-            document.getElementById('improvementScore').textContent = learningData.improvementScore + '%';
-            document.getElementById('feedbackCount').textContent = learningData.feedbacks.length;
-            document.getElementById('skillLevel').textContent = learningData.skillLevel;
-            
-            // 진도 바 업데이트
-            const progressPercent = Math.min(100, learningData.sessions * 2);
-            document.getElementById('overallProgress').style.width = progressPercent + '%';
-            
-            // 스킬 진도 업데이트 (랜덤하게 발전)
-            if (learningData.sessions % 3 === 0) {
-                Object.keys(learningData.skillProgress).forEach(skill => {
-                    if (Math.random() > 0.7 && learningData.skillProgress[skill] < 5) {
-                        learningData.skillProgress[skill]++;
-                    }
-                });
-            }
-        }
-        
-        function addToHistory(type, data) {
-            learningData.analysisHistory.unshift({
-                timestamp: new Date(),
-                type: type,
-                data: data
-            });
-            
-            // 최대 50개 항목만 보관
-            if (learningData.analysisHistory.length > 50) {
-                learningData.analysisHistory = learningData.analysisHistory.slice(0, 50);
-            }
-        }
-        
-        function updateHistoryDisplay() {
-            const historyList = document.getElementById('historyList');
-            
-            if (learningData.analysisHistory.length === 0) {
-                historyList.innerHTML = '<p>아직 분석 기록이 없습니다. 파일을 업로드하거나 질문을 해보세요!</p>';
-                return;
-            }
-            
-            historyList.innerHTML = learningData.analysisHistory.map((item, index) => {
-                const timeStr = item.timestamp.toLocaleString();
-                let content = '';
-                
-                switch(item.type) {
-                    case 'image_analysis':
-                        content = `🖼️ 이미지 분석 - 스타일: ${item.data.style}, 품질: ${item.data.quality}`;
-                        break;
-                    case 'text_input':
-                        content = `💭 텍스트 분석 - "${item.data.input.substring(0, 30)}..."`;
-                        break;
-                    case 'file_upload':
-                        content = `📁 파일 업로드 - ${item.data.name}`;
-                        break;
-                    default:
-                        content = `📝 기타 활동 - ${JSON.stringify(item.data).substring(0, 50)}...`;
-                }
-                
-                return `
-                    <div class="analysis-item">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span>${content}</span>
-                            <small style="color: #666;">${timeStr}</small>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        function clearWorkspace() {
-            document.getElementById('userInput').value = '';
-            document.getElementById('analysisResults').innerHTML = '';
-            document.getElementById('imagePreview').style.display = 'none';
-            document.getElementById('fileInput').value = '';
-        }
-        
-        function loadSavedData() {
-            try {
-                const savedData = localStorage.getItem('learningData');
-                if (savedData) {
-                    const parsed = JSON.parse(savedData);
-                    // 기존 구조와 병합
-                    learningData = { ...learningData, ...parsed };
-                    
-                    // 날짜 객체 복원
-                    learningData.feedbacks.forEach(feedback => {
-                        feedback.timestamp = new Date(feedback.timestamp);
-                    });
-                    learningData.analysisHistory.forEach(item => {
-                        item.timestamp = new Date(item.timestamp);
-                    });
-                }
-            } catch(e) {
-                console.log('저장된 데이터 로드 실패, 새로 시작');
-            }
-        }
-        
-        // 자동 학습 및 개선 제안
-        function generateAutoImprovement() {
-            const sessionCount = learningData.sessions;
-            const recentActivities = learningData.analysisHistory.slice(0, 5);
-            
-            if (sessionCount > 0 && sessionCount % 5 === 0) {
-                const chatContainer = document.getElementById('chatContainer');
-                
-                const autoSuggestion = `
-                    <div class="message coach">
-                        <strong>🤖 자동 학습 분석:</strong> ${sessionCount}번의 세션을 완료하셨네요! 🎉<br><br>
-                        <strong>발견된 패턴:</strong><br>
-                        • 주로 ${getMainActivityType()}에 관심이 많으시군요<br>
-                        • 학습 속도가 ${getLearningSpeed()}입니다<br><br>
-                        <strong>다음 단계 제안:</strong><br>
-                        • ${getNextStepSuggestion()}<br>
-                        • 새로운 도전을 시도해보세요!
-                    </div>
-                `;
-                
-                chatContainer.innerHTML += autoSuggestion;
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
-        }
-        
-        function getMainActivityType() {
-            const types = learningData.analysisHistory.map(item => item.type);
-            const counts = {};
-            types.forEach(type => counts[type] = (counts[type] || 0) + 1);
-            
-            const main = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b, 'general');
-            
-            switch(main) {
-                case 'image_analysis': return '이미지 분석';
-                case 'text_input': return '텍스트 질문';
-                case 'file_upload': return '파일 작업';
-                default: return '종합적인 학습';
-            }
-        }
-        
-        function getLearningSpeed() {
-            const speed = learningData.sessions / Math.max(1, learningData.analysisHistory.length);
-            return speed > 0.8 ? '매우 빠름 🚀' : speed > 0.5 ? '보통 📈' : '신중함 🤔';
-        }
-        
-        function getNextStepSuggestion() {
-            const suggestions = [
-                '더 복잡한 프로젝트에 도전해보세요',
-                '다른 스타일이나 기법을 실험해보세요',
-                '협업 프로젝트를 시작해보세요',
-                '포트폴리오를 정리해보세요',
-                '새로운 도구나 소프트웨어를 배워보세요'
-            ];
-            
-            return suggestions[Math.floor(Math.random() * suggestions.length)];
-        }
-        
-        // 키보드 단축키
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.key === 'Enter') {
-                processInput();
-            } else if (e.key === 'Enter' && e.target.id === 'chatInput') {
-                sendChatMessage();
-            }
+// 🎨 완전한 NIMA 탈중앙 사용자 앱
+const NimaDecentralizedApp = () => {
+  // 🌐 시스템 상태
+  const [systemStatus, setSystemStatus] = useState({
+    isOnline: false,
+    nodeId: '',
+    connectedPeers: 0,
+    totalCoaches: 0,
+    totalSessions: 0,
+    dataSync: 'syncing'
+  });
+
+  // 🤖 코치 관리
+  const [coaches, setCoaches] = useState([]);
+  const [activeCoach, setActiveCoach] = useState(null);
+  const [isCreatingCoach, setIsCreatingCoach] = useState(false);
+
+  // 💬 채팅 상태
+  const [chatMessages, setChatMessages] = useState([]);
+  const [currentMessage, setCurrentMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
+  // 🎛️ UI 상태
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [showNotification, setShowNotification] = useState('');
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  // 🚀 시스템 초기화 시뮬레이션
+  useEffect(() => {
+    const initializeSystem = async () => {
+      // 초기화 애니메이션
+      setTimeout(() => {
+        setSystemStatus({
+          isOnline: true,
+          nodeId: 'nima-' + Math.random().toString(36).substr(2, 8),
+          connectedPeers: Math.floor(Math.random() * 15) + 5,
+          totalCoaches: Math.floor(Math.random() * 50) + 10,
+          totalSessions: Math.floor(Math.random() * 300) + 100,
+          dataSync: 'synced'
         });
         
-        // 페이지 로드 시 초기화
-        window.addEventListener('load', function() {
-            setupFileUpload();
-            initSpeechRecognition();
-            loadSavedData();
-            
-            // 환영 메시지와 함께 시작
-            setTimeout(() => {
-                updateProgressDisplay();
-                
-                // 정기적으로 자동 개선 제안
-                setInterval(generateAutoImprovement, 30000); // 30초마다 체크
-            }, 1000);
-        });
+        // 샘플 코치들 로드
+        setCoaches([
+          {
+            id: 'coach_1',
+            name: '썸네일 마스터 AI',
+            specialization: 'thumbnail_design',
+            personality: 'creative',
+            status: 'active',
+            sessions: 142,
+            rating: 4.9,
+            avatar: '🎨',
+            lastActive: '방금 전',
+            expertise: ['색상 최적화', '텍스트 배치', '감정 유발'],
+            successRate: 87
+          },
+          {
+            id: 'coach_2', 
+            name: '조회수 폭발 전략가',
+            specialization: 'youtube_growth',
+            personality: 'analytical',
+            status: 'active',
+            sessions: 238,
+            rating: 4.8,
+            avatar: '📈',
+            lastActive: '1분 전',
+            expertise: ['알고리즘 최적화', '트렌드 분석', 'A/B 테스트'],
+            successRate: 92
+          },
+          {
+            id: 'coach_3',
+            name: 'SEO 최적화 닥터',
+            specialization: 'seo_optimization',
+            personality: 'professional',
+            status: 'active', 
+            sessions: 156,
+            rating: 4.7,
+            avatar: '🔍',
+            lastActive: '3분 전',
+            expertise: ['키워드 리서치', '태그 최적화', '검색 노출'],
+            successRate: 89
+          },
+          {
+            id: 'coach_4',
+            name: '콘텐츠 아이디어 뱅크',
+            specialization: 'content_strategy',
+            personality: 'creative',
+            status: 'active',
+            sessions: 89,
+            rating: 4.6,
+            avatar: '💡',
+            lastActive: '5분 전',
+            expertise: ['트렌드 예측', '아이디어 발굴', '컨셉 기획'],
+            successRate: 85
+          }
+        ]);
+
+        setIsInitializing(false);
+        showNotificationMessage('🎉 NIMA 분산 시스템이 성공적으로 초기화되었습니다!');
+      }, 3000);
+    };
+
+    initializeSystem();
+  }, []);
+
+  // 📢 알림 표시
+  const showNotificationMessage = useCallback((message) => {
+    setShowNotification(message);
+    setTimeout(() => setShowNotification(''), 4000);
+  }, []);
+
+  // 🤖 새 코치 생성
+  const createNewCoach = async () => {
+    setIsCreatingCoach(true);
+    
+    setTimeout(() => {
+      const specializations = [
+        { name: 'gaming', display: '게임 콘텐츠', avatar: '🎮' },
+        { name: 'beauty', display: '뷰티 & 패션', avatar: '💄' },
+        { name: 'tech', display: '기술 리뷰', avatar: '💻' },
+        { name: 'education', display: '교육 콘텐츠', avatar: '📚' },
+        { name: 'fitness', display: '피트니스', avatar: '💪' },
+        { name: 'cooking', display: '요리 & 레시피', avatar: '👨‍🍳' }
+      ];
+      
+      const personalities = ['friendly', 'professional', 'energetic', 'analytical', 'creative'];
+      
+      const selectedSpec = specializations[Math.floor(Math.random() * specializations.length)];
+      
+      const newCoach = {
+        id: 'coach_' + Date.now(),
+        name: `${selectedSpec.display} 전문가`,
+        specialization: selectedSpec.name,
+        personality: personalities[Math.floor(Math.random() * personalities.length)],
+        status: 'active',
+        sessions: 0,
+        rating: 5.0,
+        avatar: selectedSpec.avatar,
+        lastActive: '방금 전',
+        expertise: ['새로운 전략', '맞춤 분석', '실시간 피드백'],
+        successRate: 95
+      };
+
+      setCoaches(prev => [...prev, newCoach]);
+      setSystemStatus(prev => ({...prev, totalCoaches: prev.totalCoaches + 1}));
+      setIsCreatingCoach(false);
+      showNotificationMessage(`✨ ${newCoach.name}이(가) 성공적으로 생성되었습니다!`);
+    }, 2500);
+  };
+
+  // 💬 메시지 전송
+  const sendMessage = async () => {
+    if (!currentMessage.trim() || !activeCoach) return;
+
+    const userMessage = {
+      id: Date.now(),
+      type: 'user',
+      content: currentMessage,
+      timestamp: new Date().toLocaleTimeString()
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setCurrentMessage('');
+    setIsTyping(true);
+
+    // AI 응답 시뮬레이션
+    setTimeout(() => {
+      const responses = {
+        'thumbnail_design': [
+          '썸네일에는 밝은 색상과 대비가 강한 텍스트를 사용하세요! 🎨 빨간색, 노란색, 파란색이 클릭률을 30% 높입니다.',
+          '사람 얼굴이 들어간 썸네일은 클릭률이 평균 35% 더 높아요! 😊 놀란 표정이나 웃는 표정을 활용해보세요.',
+          '썸네일 텍스트는 3-4단어 이내로 크고 굵게! 📱 모바일에서도 잘 보이도록 22pt 이상 사용하는 게 좋습니다.'
+        ],
+        'youtube_growth': [
+          '첫 15초가 가장 중요해요! ⚡ 강력한 훅으로 시청자를 붙잡고, 시청 시간을 늘리세요. 알고리즘이 더 많이 추천합니다.',
+          '일관된 업로드 스케줄이 성장의 핵심! 📅 주 2-3회 정기 업로드로 시청자들이 기대할 수 있는 패턴을 만드세요.',
+          '댓글에 빠르게 응답하세요! 💬 참여도가 높을수록 알고리즘이 더 많이 노출시킵니다. 골든타임은 업로드 후 2시간!'
+        ],
+        'seo_optimization': [
+          '제목에 핵심 키워드를 앞쪽에 배치하세요! 🔍 60자 이내로 하고, 감정을 자극하는 단어와 숫자를 포함하면 효과적입니다.',
+          '설명란 첫 125자가 검색 결과에 표시돼요! 📝 핵심 내용과 키워드를 포함하고, 타임스탬프를 꼭 활용하세요.',
+          '관련성 높은 태그 10-15개가 적당해요! 🏷️ 브로드 태그와 롱테일 키워드를 적절히 조합하는 것이 중요합니다.'
+        ],
+        'content_strategy': [
+          '현재 트렌드를 분석해서 말씀드리면, 짧은 형태의 콘텐츠가 인기예요! 📊 15-60초 쇼츠와 8-12분 메인 영상의 조합이 좋습니다.',
+          '시청자가 원하는 콘텐츠를 만들려면 댓글과 커뮤니티 탭을 활용하세요! 💡 직접 물어보고 피드백을 받는 게 최고입니다.',
+          '스토리텔링이 핵심이에요! 📚 문제 제기 → 해결 과정 → 결론 구조로 만들면 시청 완료율이 높아집니다.'
+        ]
+      };
+
+      const coachResponses = responses[activeCoach.specialization] || responses['content_strategy'];
+      const selectedResponse = coachResponses[Math.floor(Math.random() * coachResponses.length)];
+
+      const aiMessage = {
+        id: Date.now() + 1,
+        type: 'ai',
+        content: selectedResponse,
+        timestamp: new Date().toLocaleTimeString()
+      };
+
+      setChatMessages(prev => [...prev, aiMessage]);
+      setIsTyping(false);
+      
+      // 세션 카운트 증가
+      setSystemStatus(prev => ({...prev, totalSessions: prev.totalSessions + 1}));
+      
+      // 코치 세션 증가
+      setCoaches(prev => prev.map(coach => 
+        coach.id === activeCoach.id 
+          ? {...coach, sessions: coach.sessions + 1, lastActive: '방금 전'}
+          : coach
+      ));
+    }, 1800);
+  };
+
+  // 로딩 화면
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative mb-8">
+            <div className="w-20 h-20 border-4 border-blue-500/30 rounded-full"></div>
+            <div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin absolute top-0"></div>
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center absolute top-4 left-4">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-4">NIMA 분산 시스템 초기화</h2>
+          <div className="space-y-2 text-gray-300">
+            <p className="flex items-center justify-center gap-2">
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+              IPFS 노드 연결 중...
+            </p>
+            <p className="flex items-center justify-center gap-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              P2P 네트워크 구성 중...
+            </p>
+            <p className="flex items-center justify-center gap-2">
+              <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+              AI 코치 시스템 로딩 중...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 🎨 상태별 색상
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'synced': return 'text-green-400';
+      case 'syncing': return 'text-yellow-400 animate-pulse';
+      case 'offline': return 'text-red-400';
+      default: return 'text-gray-400';
+    }
+  };
+
+  // 📊 대시보드 뷰
+  const DashboardView = () => (
+    <div className="space-y-8">
+      {/* 시스템 상태 카드 */}
+      <div className="bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-3xl p-8 border border-blue-500/20 backdrop-blur-sm">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+            <Globe className="w-8 h-8 text-blue-400" />
+            분산 네트워크 상태
+          </h3>
+          <div className="flex items-center gap-3">
+            {systemStatus.isOnline ? (
+              <div className="flex items-center gap-2 bg-green-500/20 px-4 py-2 rounded-full">
+                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-green-400 font-medium">온라인</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 bg-red-500/20 px-4 py-2 rounded-full">
+                <WifiOff className="w-4 h-4 text-red-400" />
+                <span className="text-red-400 font-medium">오프라인</span>
+              </div>
+            )}
+          </div>
+        </div>
         
-        // 이벤트 리스너 설정
-        document.getElementById('voiceBtn').addEventListener('click', toggleVoice);
-        document.getElementById('userInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && e.ctrlKey) {
-                processInput();
-            }
-        });
-        document.getElementById('chatInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendChatMessage();
-            }
-        });
-    </script>
-</body>
-</html>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="bg-black/30 rounded-2xl p-6 border border-gray-700/50">
+            <div className="flex items-center gap-3 mb-2">
+              <Users className="w-6 h-6 text-blue-400" />
+              <span className="text-gray-400 text-sm">연결된 노드</span>
+            </div>
+            <div className="text-3xl font-bold text-white">{systemStatus.connectedPeers}</div>
+            <div className="text-green-400 text-xs mt-1">+2 (지난 시간)</div>
+          </div>
+          
+          <div className="bg-black/30 rounded-2xl p-6 border border-gray-700/50">
+            <div className="flex items-center gap-3 mb-2">
+              <Brain className="w-6 h-6 text-purple-400" />
+              <span className="text-gray-400 text-sm">활성 코치</span>
+            </div>
+            <div className="text-3xl font-bold text-white">{systemStatus.totalCoaches}</div>
+            <div className="text-green-400 text-xs mt-1">100% 가동률</div>
+          </div>
+          
+          <div className="bg-black/30 rounded-2xl p-6 border border-gray-700/50">
+            <div className="flex items-center gap-3 mb-2">
+              <MessageCircle className="w-6 h-6 text-green-400" />
+              <span className="text-gray-400 text-sm">총 세션</span>
+            </div>
+            <div className="text-3xl font-bold text-white">{systemStatus.totalSessions}</div>
+            <div className="text-green-400 text-xs mt-1">+15 (오늘)</div>
+          </div>
+          
+          <div className="bg-black/30 rounded-2xl p-6 border border-gray-700/50">
+            <div className="flex items-center gap-3 mb-2">
+              <Database className="w-6 h-6 text-yellow-400" />
+              <span className="text-gray-400 text-sm">데이터 동기화</span>
+            </div>
+            <div className={`text-xl font-bold ${getStatusColor(systemStatus.dataSync)}`}>
+              {systemStatus.dataSync === 'synced' ? '완료' : '진행중'}
+            </div>
+            <div className="text-gray-400 text-xs mt-1">실시간 백업</div>
+          </div>
+        </div>
+        
+        <div className="mt-6 flex items-center justify-between text-sm">
+          <span className="text-gray-400">노드 ID: {systemStatus.nodeId}</span>
+          <span className="text-gray-400 flex items-center gap-2">
+            <Shield className="w-4 h-4" />
+            완전 탈중앙화 보안
+          </span>
+        </div>
+      </div>
+
+      {/* 빠른 액션 카드들 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div 
+          onClick={createNewCoach}
+          className="bg-gradient-to-br from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 rounded-3xl p-8 cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+        >
+          <div className="flex items-center gap-4 mb-4">
+            {isCreatingCoach ? (
+              <div className="w-12 h-12 rounded-full border-3 border-white/30 border-t-white animate-spin"></div>
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                <Plus className="w-8 h-8 text-white" />
+              </div>
+            )}
+            <div>
+              <h3 className="font-bold text-white text-xl">AI 코치 생성</h3>
+              <p className="text-green-100 text-sm">
+                {isCreatingCoach ? '분산 네트워크에 생성 중...' : '무제한 전문가 즉시 생성'}
+              </p>
+            </div>
+          </div>
+          {!isCreatingCoach && (
+            <div className="flex items-center text-white/80 text-sm">
+              <Sparkles className="w-4 h-4 mr-2" />
+              완전 맞춤형 AI 전문가
+            </div>
+          )}
+        </div>
+
+        <div 
+          onClick={() => setCurrentView('coaches')}
+          className="bg-gradient-to-br from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 rounded-3xl p-8 cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+        >
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+              <Users className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-xl">코치 관리</h3>
+              <p className="text-blue-100 text-sm">{coaches.length}명의 전문가 활동 중</p>
+            </div>
+          </div>
+          <div className="flex items-center text-white/80 text-sm">
+            <Activity className="w-4 h-4 mr-2" />
+            실시간 성능 모니터링
+          </div>
+        </div>
+
+        <div 
+          onClick={() => showNotificationMessage('🔄 시스템 최적화를 시작합니다...')}
+          className="bg-gradient-to-br from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-3xl p-8 cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
+        >
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+              <Zap className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-xl">시스템 최적화</h3>
+              <p className="text-purple-100 text-sm">자동 성능 향상 중</p>
+            </div>
+          </div>
+          <div className="flex items-center text-white/80 text-sm">
+            <TrendingUp className="w-4 h-4 mr-2" />
+            AI 기반 자동 튜닝
+          </div>
+        </div>
+      </div>
+
+      {/* 최근 활동 & 통계 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* 최근 활동 */}
+        <div className="bg-gray-800/40 rounded-3xl p-8 border border-gray-700/50 backdrop-blur-sm">
+          <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
+            <Clock className="w-6 h-6 text-blue-400" />
+            실시간 활동
+          </h3>
+          <div className="space-y-4">
+            {[
+              { action: '새 AI 코치 생성', time: '1분 전', icon: '🤖', type: 'success' },
+              { action: '피어 노드 연결', time: '3분 전', icon: '🌐', type: 'info' },
+              { action: '데이터 자동 백업', time: '5분 전', icon: '💾', type: 'success' },
+              { action: '썸네일 분석 완료', time: '8분 전', icon: '🎨', type: 'success' },
+              { action: 'SEO 최적화 제안', time: '12분 전', icon: '🔍', type: 'info' }
+            ].map((activity, index) => (
+              <div key={index} className={`flex items-center gap-4 p-4 rounded-2xl ${
+                activity.type === 'success' ? 'bg-green-500/10 border border-green-500/20' : 'bg-blue-500/10 border border-blue-500/20'
+              }`}>
+                <div className="text-2xl">{activity.icon}</div>
+                <div className="flex-1">
+                  <div className="text-white font-medium">{activity.action}</div>
+                  <div className="text-gray-400 text-sm">{activity.time}</div>
+                </div>
+                <div className={`w-2 h-2 rounded-full ${
+                  activity.type === 'success' ? 'bg-green-400' : 'bg-blue-400'
+                } animate-pulse`}></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 성능 통계 */}
+        <div className="bg-gray-800/40 rounded-3xl p-8 border border-gray-700/50 backdrop-blur-sm">
+          <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
+            <TrendingUp className="w-6 h-6 text-green-400" />
+            성능 지표
+          </h3>
+          <div className="space-y-6">
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-400">시스템 성능</span>
+                <span className="text-green-400 font-medium">98%</span>
+              </div>
+              <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-green-400 to-emerald-400 w-[98%] animate-pulse"></div>
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-400">네트워크 동기화</span>
+                <span className="text-blue-400 font-medium">95%</span>
+              </div>
+              <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 w-[95%]"></div>
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-400">AI 응답 품질</span>
+                <span className="text-purple-400 font-medium">97%</span>
+              </div>
+              <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-purple-400 to-pink-400 w-[97%]"></div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-white">99.9%</div>
+                <div className="text-xs text-gray-400">가동시간</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-white">0.8s</div>
+                <div className="text-xs text-gray-400">평균 응답</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // 👥 코치 관리 뷰
+  const CoachesView = () => (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+          <Brain className="w-10 h-10 text-blue-400" />
+          AI 코치 관리 센터
+        </h2>
+        <button
+          onClick={createNewCoach}
+          disabled={isCreatingCoach}
+          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 px-6 py-3 rounded-xl text-white font-medium flex items-center gap-2 transition-all duration-200 transform hover:scale-105"
+        >
+          <Plus className="w-5 h-5" />
+          새 코치 생성
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        {coaches.map((coach) => (
+          <div 
+            key={coach.id}
+            className="bg-gradient-to-b from-gray-800/80 to-gray-900/80 rounded-3xl p-8 border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300 hover:transform hover:scale-105 backdrop-blur-sm"
+          >
+            {/* 코치 헤더 */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-3xl shadow-lg">
+                {coach.avatar}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-lg">{coach.name}</h3>
+                <p className="text-gray-400 text-sm capitalize">{coach.specialization.replace('_', ' ')}</p>
+              </div>
+              <div className={`w-4 h-4 rounded-full ${coach.status === 'active' ? 'bg-green-400 animate-pulse' : 'bg-gray-400'}`}></div>
+            </div>
+
+            {/* 전문분야 태그들 */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {coach.expertise.map((skill, index) => (
+                <span key={index} className="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-500/30">
+                  {skill}
+                </span>
+              ))}
+            </div>
+
+            {/* 통계 정보 */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="bg-black/30 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <MessageCircle className="w-4 h-4 text-green-400" />
+                  <span className="text-gray-400 text-xs">세션</span>
+                </div>
+                <div className="text-white font-bold text-xl">{coach.sessions}</div>
+              </div>
+              
+              <div className="bg-black/30 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Star className="w-4 h-4 text-yellow-400" />
+                  <span className="text-gray-400 text-xs">평점</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-white font-bold text-xl">{coach.rating}</span>
+                  <span className="text-yellow-400 text-sm">★</span>
+                </div>
+              </div>
+              
+              <div className="bg-black/30 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <TrendingUp className="w-4 h-4 text-purple-400" />
+                  <span className="text-gray-400 text-xs">성공률</span>
+                </div>
+                <div className="text-white font-bold text-xl">{coach.successRate}%</div>
+              </div>
+              
+              <div className="bg-black/30 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Clock className="w-4 h-4 text-blue-400" />
+                  <span className="text-gray-400 text-xs">최근활동</span>
+                </div>
+                <div className="text-white font-medium text-sm">{coach.lastActive}</div>
+              </div>
+            </div>
+
+            {/* 액션 버튼들 */}
+            <div className="flex gap-3">
+              <button 
+                onClick={() => {
+                  setActiveCoach(coach);
+                  setCurrentView('chat');
+                  setChatMessages([]);
+                }}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 px-4 py-3 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all duration-200 transform hover:scale-105"
+              >
+                <MessageCircle className="w-4 h-4" />
+                채팅 시작
+              </button>
+              <button className="bg-gray-700 hover:bg-gray-600 px-4 py-3 rounded-xl text-white transition-colors">
+                <Settings className="w-4 h-4" />
+              </button>
+              <button className="bg-gray-700 hover:bg-gray-600 px-4 py-3 rounded-xl text-white transition-colors">
+                <Share2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+
+        {/* 새 코치 생성 카드 */}
+        <div 
+          onClick={createNewCoach}
+          className="bg-gradient-to-b from-gray-800/40 to-gray-900/40 rounded-3xl p-8 border-2 border-dashed border-gray-600 hover:border-blue-400 transition-all duration-300 hover:transform hover:scale-105 cursor-pointer flex flex-col items-center justify-center text-center min-h-[400px]"
+        >
+          {isCreatingCoach ? (
+            <div className="space-y-4">
+              <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+              <div>
+                <h3 className="text-white font-bold text-lg mb-2">AI 코치 생성 중...</h3>
+                <p className="text-gray-400 text-sm">분산 네트워크에 새로운 전문가를 배포하고 있습니다</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                <Plus className="w-8 h-8 text-blue-400" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-lg mb-2">새 AI 코치 생성</h3>
+                <p className="text-gray-400 text-sm">원하는 전문분야의 AI 전문가를<br/>즉시 생성하세요</p>
+              </div>
+              <div className="flex items-center justify-center gap-2 text-blue-400 text-sm">
+                <Sparkles className="w-4 h-4" />
+                무제한 생성 가능
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  // 💬 채팅 뷰
+  const ChatView = () => (
+    <div className="h-full flex flex-col">
+      {activeCoach ? (
+        <>
+          {/* 채팅 헤더 */}
+          <div className="bg-gradient-to-r from-blue-800/80 to-purple-800/80 rounded-3xl p-6 mb-8 backdrop-blur-sm border border-blue-500/20">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-3xl shadow-lg">
+                {activeCoach.avatar}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-xl">{activeCoach.name}</h3>
+                <p className="text-blue-200 text-sm">{activeCoach.specialization.replace('_', ' ')} 전문가</p>
+                <div className="flex items-center gap-4 mt-2">
+                  <div className="flex items-center gap-1 text-yellow-400 text-sm">
+                    <Star className="w-4 h-4 fill-current" />
+                    {activeCoach.rating}
+                  </div>
+                  <div className="text-green-200 text-sm">{activeCoach.sessions}회 상담</div>
+                  <div className="text-purple-200 text-sm">{activeCoach.successRate}% 성공률</div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-3 rounded-full bg-green-400 animate-pulse"></div>
+                  <span className="text-green-200 text-sm font-medium">온라인</span>
+                </div>
+                <div className="text-blue-200 text-xs">실시간 응답 중</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 채팅 메시지 영역 */}
+          <div className="flex-1 bg-gray-800/30 rounded-3xl p-8 mb-8 overflow-y-auto max-h-[500px] backdrop-blur-sm border border-gray-700/50">
+            {chatMessages.length === 0 ? (
+              <div className="text-center text-gray-400 py-16">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center mx-auto mb-6">
+                  <MessageCircle className="w-10 h-10 text-blue-400" />
+                </div>
+                <h3 className="text-2xl font-semibold mb-4 text-white">{activeCoach.name}와 대화를 시작하세요</h3>
+                <p className="text-lg mb-6">전문적인 유튜브 최적화 조언을 받아보세요!</p>
+                
+                {/* 추천 질문들 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                  {[
+                    "썸네일을 어떻게 만들어야 하나요?",
+                    "조회수를 늘리는 방법은?",
+                    "SEO 최적화 팁을 알려주세요",
+                    "콘텐츠 아이디어가 필요해요"
+                  ].map((question, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setCurrentMessage(question);
+                        setTimeout(() => sendMessage(), 100);
+                      }}
+                      className="bg-gray-700/50 hover:bg-gray-600/50 p-4 rounded-xl text-left transition-colors border border-gray-600/50 hover:border-blue-500/50"
+                    >
+                      <div className="text-white text-sm">{question}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {chatMessages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex gap-4 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {message.type === 'ai' && (
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-lg shadow-lg">
+                        {activeCoach.avatar}
+                      </div>
+                    )}
+                    <div className={`max-w-md p-6 rounded-3xl shadow-lg ${
+                      message.type === 'user' 
+                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-br-lg' 
+                        : 'bg-gray-700/80 text-white rounded-bl-lg backdrop-blur-sm border border-gray-600/50'
+                    }`}>
+                      <p className="leading-relaxed">{message.content}</p>
+                      <p className="text-xs opacity-70 mt-3 flex items-center gap-2">
+                        <Clock className="w-3 h-3" />
+                        {message.timestamp}
+                      </p>
+                    </div>
+                    {message.type === 'user' && (
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center text-white font-bold shadow-lg">
+                        U
+                      </div>
+                    )}
+                  </div>
+                ))}
+                
+                {isTyping && (
+                  <div className="flex gap-4 justify-start">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-lg">
+                      {activeCoach.avatar}
+                    </div>
+                    <div className="bg-gray-700/80 p-6 rounded-3xl rounded-bl-lg backdrop-blur-sm border border-gray-600/50">
+                      <div className="flex gap-2">
+                        <div className="w-3 h-3 bg-blue-400 rounded-full animate-bounce"></div>
+                        <div className="w-3 h-3 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-3 h-3 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* 메시지 입력 영역 */}
+          <div className="bg-gray-800/50 rounded-3xl p-6 backdrop-blur-sm border border-gray-700/50">
+            <div className="flex gap-4">
+              <input
+                type="text"
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                placeholder="메시지를 입력하세요..."
+                className="flex-1 bg-gray-700/50 text-white px-6 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-600/50 placeholder-gray-400"
+              />
+              <button
+                onClick={sendMessage}
+                disabled={!currentMessage.trim() || isTyping}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 px-8 py-4 rounded-2xl text-white font-medium transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+              >
+                <Send className="w-5 h-5" />
+                전송
+              </button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center text-gray-400">
+            <MessageCircle className="w-24 h-24 mx-auto mb-6 opacity-50" />
+            <h3 className="text-2xl font-semibold mb-4 text-white">코치를 선택해주세요</h3>
+            <p className="text-lg mb-8">코치 관리에서 대화할 AI 전문가를 선택하세요</p>
+            <button
+              onClick={() => setCurrentView('coaches')}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 px-8 py-4 rounded-2xl text-white font-medium transition-all duration-200 transform hover:scale-105"
+            >
+              코치 선택하러 가기
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+      {/* 알림 */}
+      {showNotification && (
+        <div className="fixed top-6 right-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-2xl shadow-2xl z-50 animate-slide-in border border-green-400/20 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <Check className="w-5 h-5" />
+            {showNotification}
+          </div>
+        </div>
+      )}
+
+      {/* 헤더 */}
+      <header className="bg-black/20 backdrop-blur-lg border-b border-gray-700/50">
+        <div className="max-w-7xl mx-auto px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg">
+                <Sparkles className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">NIMA</h1>
+                <p className="text-sm text-gray-400">탈중앙 무한생성 AI 시스템</p>
+              </div>
+            </div>
+            
+            <nav className="flex items-center gap-3">
+              {[
+                { id: 'dashboard', label: '대시보드', icon: Cpu },
+                { id: 'coaches', label: 'AI 코치', icon: Users },
+                { id: 'chat', label: '채팅', icon: MessageCircle }
+              ].map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setCurrentView(id)}
+                  className={`px-6 py-3 rounded-xl font-medium flex items-center gap-3 transition-all duration-200 ${
+                    currentView === id
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg transform scale-105'
+                      : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  {label}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      {/* 메인 콘텐츠 */}
+      <main className="max-w-7xl mx-auto px-8 py-12">
+        {currentView === 'dashboard' && <DashboardView />}
+        {currentView === 'coaches' && <CoachesView />}
+        {currentView === 'chat' && <ChatView />}
+      </main>
+
+      {/* 푸터 */}
+      <footer className="bg-black/20 border-t border-gray-700/50 py-8 backdrop-blur-lg">
+        <div className="max-w-7xl mx-auto px-8">
+          <div className="flex items-center justify-between text-sm text-gray-400">
+            <div className="flex items-center gap-6">
+              <span className="font-medium">© 2024 NIMA 분산 시스템</span>
+              <span className="flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                완전 탈중앙화
+              </span>
+              <span className="flex items-center gap-2">
+                <Database className="w-4 h-4" />
+                분산 저장
+              </span>
+            </div>
+            <div className="flex items-center gap-6">
+              <span>버전 1.0.0</span>
+              <span className="flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                P2P 네트워크
+              </span>
+              <span className="flex items-center gap-2 text-green-400">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                시스템 정상
+              </span>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      <style jsx>{`
+        @keyframes slide-in {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default NimaDecentralizedApp;
