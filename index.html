@@ -12,58 +12,80 @@
   <!-- Babel Standalone for JSX -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body class="bg-gradient-to-br from-gray-900 to-indigo-900 min-h-screen flex flex-col">
+<body class="bg-gradient-to-br from-indigo-900 to-purple-900 min-h-screen flex flex-col">
   <div id="root" class="flex-1 flex flex-col"></div>
   <script type="text/babel">
-    // 메인 NIMA 분산 AI UI (모바일 최적화)
     function NimaApp() {
       const [input, setInput] = React.useState("");
       const [messages, setMessages] = React.useState([
-        {type: "sys", content: "🚀 NIMA 분산AI 시스템에 오신 걸 환영합니다!", timestamp: new Date().toLocaleTimeString("ko-KR")}
+        {
+          type: "sys",
+          content: "🎉 <b>NIMA 분산AI 코치 시스템</b>에 오신 걸 환영합니다!<br>아래에 메시지를 입력하거나, <span class='text-indigo-400 font-bold'>집단 업데이트</span> 버튼을 눌러 <b>10억명 자동 동기화</b>를 체험하세요.<br><br><span class='text-gray-300'>예시: \"AI코치야, 유튜브 채널 성장 전략 알려줘\"</span>",
+          timestamp: new Date().toLocaleTimeString("ko-KR")
+        }
       ]);
       const [isUpdating, setIsUpdating] = React.useState(false);
-      // 대표 집단 업데이트 시뮬레이션
+
+      // 집단 업데이트 버튼 클릭
       const sendGlobalUpdate = () => {
         setIsUpdating(true);
         setTimeout(()=>{
-          setMessages(msgs=>[...msgs, {type:"update", content:"🛠️ 대표 NEMA 집단 업데이트 실행! (10억 동기화)", timestamp: new Date().toLocaleTimeString("ko-KR")}]);
+          setMessages(msgs=>[...msgs, {
+            type:"update",
+            content:"🛠️ <b>대표 NEMA 집단 업데이트</b> 실행!<br>10억명 AI가 동기화되었습니다.",
+            timestamp: new Date().toLocaleTimeString("ko-KR")
+          }]);
           setIsUpdating(false);
         }, 1200);
       };
+      // 채팅 메시지 전송
       const sendMessage = () => {
         if(input.trim() === "") return;
-        setMessages(msgs=>[...msgs, {type:"user", content:input, timestamp: new Date().toLocaleTimeString("ko-KR")}]);
+        setMessages(msgs=>[...msgs, {
+          type:"user", content:input, timestamp: new Date().toLocaleTimeString("ko-KR")
+        }]);
         setInput("");
         setTimeout(()=>{
-          setMessages(msgs=>[...msgs, {type:"ai", content:"🤖 [AI코치] "+msgs[msgs.length].content+"에 대해 조언을 드립니다.", timestamp: new Date().toLocaleTimeString("ko-KR")}]);
-        }, 1200);
+          setMessages(msgs=>[...msgs, {
+            type:"ai",
+            content:`🤖 <b>[AI코치]</b> “${msgs[msgs.length].content}”에 대한 답변입니다.<br>유튜브 성장, 분산AI, 자동화, 집단 업데이트 등 무엇이든 질문해보세요!`,
+            timestamp: new Date().toLocaleTimeString("ko-KR")
+          }]);
+        }, 1300);
       };
+
       return (
         <div className="flex flex-col min-h-screen items-center justify-center">
-          <header className="w-full flex items-center justify-between px-6 py-3 bg-black/30 border-b border-indigo-800">
-            <span className="text-xl text-indigo-400 font-bold">NIMA</span>
-            <span className="text-xs text-gray-300">분산 AI/코치/채팅 시스템</span>
+          {/* 상단 로고 & 설명 */}
+          <header className="w-full px-6 py-5 bg-white/10 backdrop-blur-md rounded-b-3xl shadow-xl border-b border-indigo-700 flex flex-col items-center">
+            <div className="text-2xl font-bold text-indigo-200 flex items-center gap-2">
+              <span className="inline-block w-7 h-7 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl text-white flex items-center justify-center mr-2">🤖</span>
+              NIMA 분산AI 코치 시스템
+            </div>
+            <div className="mt-1 text-indigo-100 text-sm font-medium">10억명 집단동기화 | AI 코치 | 자동화 | 실시간 채팅</div>
           </header>
+          {/* 메인 박스 */}
           <main className="flex-1 w-full max-w-lg mx-auto p-4 flex flex-col">
             {/* 집단 업데이트 버튼 */}
-            <div className="flex gap-2 mb-2">
+            <div className="flex gap-2 mb-3 mt-4">
               <button onClick={sendGlobalUpdate}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-4 py-2 font-semibold shadow text-sm"
+                className="flex-1 bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl px-4 py-3 font-bold shadow text-base transition"
                 disabled={isUpdating}
               >{isUpdating?"업데이트 중...":"대표 NEMA 집단 업데이트"}</button>
             </div>
-            {/* 메시지 리스트 */}
-            <div className="flex-1 bg-gray-800/70 rounded-xl p-3 mb-2 overflow-y-auto max-h-[380px] min-h-[220px] shadow">
+            {/* 채팅 메시지 */}
+            <div className="flex-1 bg-gray-900/80 rounded-3xl p-4 mb-3 overflow-y-auto min-h-[220px] max-h-[360px] shadow border border-indigo-800/20">
               {messages.map((msg,i)=>
                 <div key={i} className={`my-2 ${msg.type==="user"?"text-right":""}`}>
-                  <span className={
-                    msg.type==="user"?"inline-block bg-indigo-500 text-white px-3 py-1 rounded-2xl":
-                    msg.type==="ai"?"inline-block bg-gray-700 text-blue-200 px-3 py-1 rounded-2xl":
-                    msg.type==="update"?"inline-block bg-green-500/80 text-white px-3 py-1 rounded-2xl":
-                    "inline-block bg-gray-600 text-white px-3 py-1 rounded-2xl"
-                  }>
-                    {msg.content}
-                  </span>
+                  <span
+                    className={
+                      msg.type==="user"?"inline-block bg-indigo-600 text-white px-4 py-2 rounded-2xl text-sm":
+                      msg.type==="ai"?"inline-block bg-gray-700 text-blue-200 px-4 py-2 rounded-2xl text-sm":
+                      msg.type==="update"?"inline-block bg-green-500/90 text-white px-4 py-2 rounded-2xl text-sm":
+                      "inline-block bg-gray-600/90 text-white px-4 py-2 rounded-2xl text-sm"
+                    }
+                    dangerouslySetInnerHTML={{__html: msg.content}}
+                  ></span>
                   <span className="block text-[10px] text-gray-400 mt-1">{msg.timestamp}</span>
                 </div>
               )}
@@ -75,17 +97,18 @@
                 value={input}
                 onChange={e=>setInput(e.target.value)}
                 onKeyDown={e=>e.key==="Enter"&&sendMessage()}
-                className="flex-1 px-4 py-2 rounded-lg bg-gray-900 text-white border border-gray-700 outline-none"
-                placeholder="메시지를 입력하세요..."
+                className="flex-1 px-5 py-3 rounded-2xl bg-gray-800 text-white border border-indigo-700/40 outline-none text-base placeholder-gray-400"
+                placeholder="AI에게 무엇이든 질문하거나, 집단 업데이트 버튼을 눌러보세요!"
               />
               <button
                 onClick={sendMessage}
-                className="bg-indigo-500 hover:bg-indigo-400 px-4 py-2 rounded-lg text-white font-bold"
+                className="bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-blue-600 hover:to-indigo-600 px-6 py-3 rounded-2xl text-white font-bold shadow text-base"
               >전송</button>
             </div>
           </main>
-          <footer className="w-full text-center text-xs text-gray-400 py-3 border-t border-indigo-800">
-            NIMA 분산AI 시스템 ⓒ 2024 | "새벽 3시 10억명 동기화"
+          {/* 푸터 */}
+          <footer className="w-full text-center text-xs text-indigo-100/80 py-3 border-t border-indigo-800/30">
+            NIMA ⓒ 2024 | 10억명 집단동기화, AI코치, 자동화 시스템
           </footer>
         </div>
       );
