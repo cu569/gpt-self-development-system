@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Plus, Brain, Sparkles, Users, TrendingUp, Zap, Star, CheckCircle } from "lucide-react";
 
 const dummyStats = [
   { title: "🚀 영상 업로드", value: "1,200,000", change: "+8%", highlight: true },
@@ -13,34 +14,117 @@ const dummyFields = [
   { name: "당구", leader: 21, coach: 400, users: "25만", score: 98.2 },
 ];
 
-const dummyIssues = [
-  { message: "저작권 위반 2건", action: "즉시 확인" },
-  { message: "데이터 지연 감지", action: "자동 복구중" },
+const leaderTypes = [
+  { 
+    name: "게임 마스터 리나", 
+    field: "게임", 
+    specialties: ["전략 게임", "FPS", "RPG", "모바일 게임"],
+    avatar: "🎮",
+    color: "from-purple-600 to-pink-600"
+  },
+  { 
+    name: "뷰티 인플루언서 리나", 
+    field: "뷰티", 
+    specialties: ["메이크업", "스킨케어", "헤어", "네일아트"],
+    avatar: "💄",
+    color: "from-pink-600 to-rose-600"
+  },
+  { 
+    name: "요리 전문가 리나", 
+    field: "요리", 
+    specialties: ["한식", "양식", "베이킹", "다이어트 요리"],
+    avatar: "👨‍🍳",
+    color: "from-orange-600 to-red-600"
+  },
+  { 
+    name: "피트니스 코치 리나", 
+    field: "피트니스", 
+    specialties: ["웨이트", "요가", "필라테스", "홈트레이닝"],
+    avatar: "💪",
+    color: "from-green-600 to-emerald-600"
+  },
+  { 
+    name: "교육 콘텐츠 리나", 
+    field: "교육", 
+    specialties: ["언어 학습", "수학", "과학", "코딩"],
+    avatar: "📚",
+    color: "from-blue-600 to-cyan-600"
+  }
 ];
 
-function NIMAExpertControlBox() {
+function NIMALeaderGeneration() {
   const [command, setCommand] = useState("");
   const [log, setLog] = useState([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedLeader, setSelectedLeader] = useState(null);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generatedLeaders, setGeneratedLeaders] = useState([]);
+
   useEffect(() => {
     setLog([
       "10:20 집단 업데이트 98% 완료",
-      "09:44 AI 자동복구(오류) 완료",
+      "09:44 AI 자동복구(오류) 완료", 
       "09:15 품질 피드백 신규 정책 반영",
     ]);
   }, []);
+
   const handleCommand = () => {
     if (command.trim()) {
       setLog([`${new Date().toLocaleTimeString()} 명령: ${command}`, ...log]);
       setCommand("");
     }
   };
+
+  const startLeaderGeneration = (leaderType) => {
+    setSelectedLeader(leaderType);
+    setShowModal(true);
+    setIsGenerating(true);
+    setGenerationProgress(0);
+
+    // 진행률 애니메이션
+    const progressInterval = setInterval(() => {
+      setGenerationProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval);
+          setTimeout(() => {
+            completeGeneration(leaderType);
+          }, 500);
+          return 100;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 200);
+  };
+
+  const completeGeneration = (leaderType) => {
+    const newLeader = {
+      ...leaderType,
+      id: Date.now(),
+      level: Math.floor(Math.random() * 50) + 50,
+      experience: Math.floor(Math.random() * 10000) + 5000,
+      rating: (Math.random() * 1 + 4).toFixed(1),
+      createdAt: new Date().toLocaleTimeString()
+    };
+
+    setGeneratedLeaders(prev => [...prev, newLeader]);
+    setLog(prev => [`${newLeader.createdAt} ✨ ${newLeader.name} 생성 완료 (레벨 ${newLeader.level})`, ...prev]);
+    setIsGenerating(false);
+    
+    setTimeout(() => {
+      setShowModal(false);
+      setGenerationProgress(0);
+    }, 2000);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-blue-900 flex flex-col items-center py-8 px-2">
-      <div className="w-full max-w-2xl bg-black/80 rounded-3xl shadow-2xl p-8 border border-blue-700/30">
+      <div className="w-full max-w-4xl bg-black/80 rounded-3xl shadow-2xl p-8 border border-blue-700/30">
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-8 flex items-center gap-2">
           🧑‍💼 전문가 컨트롤박스 <span className="text-blue-400 text-base font-normal">NIMA 본사</span>
         </h1>
-        {/* 하이라이트 */}
+
+        {/* 하이라이트 통계 */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           {dummyStats.map((stat, i) => (
             <div
@@ -59,6 +143,73 @@ function NIMAExpertControlBox() {
             </div>
           ))}
         </div>
+
+        {/* 리나 생성 섹션 */}
+        <div className="mb-8">
+          <div className="text-white font-bold mb-4 flex items-center gap-2">
+            <Brain className="w-6 h-6 text-blue-400" />
+            AI 리나 생성 시스템
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {leaderTypes.map((leader, i) => (
+              <div
+                key={i}
+                onClick={() => startLeaderGeneration(leader)}
+                className={`bg-gradient-to-br ${leader.color} rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/20`}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="text-4xl">{leader.avatar}</div>
+                  <div>
+                    <h3 className="text-white font-bold text-lg">{leader.name}</h3>
+                    <p className="text-white/80 text-sm">{leader.field} 전문</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1 mb-4">
+                  {leader.specialties.map((specialty, idx) => (
+                    <span key={idx} className="bg-white/20 text-white text-xs px-2 py-1 rounded-full">
+                      {specialty}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex items-center justify-center gap-2 text-white">
+                  <Plus className="w-4 h-4" />
+                  <span className="font-medium">리나 생성</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 생성된 리나들 */}
+        {generatedLeaders.length > 0 && (
+          <div className="mb-8">
+            <div className="text-white font-bold mb-4 flex items-center gap-2">
+              <Users className="w-6 h-6 text-green-400" />
+              생성된 AI 리나들
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {generatedLeaders.map((leader) => (
+                <div key={leader.id} className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="text-3xl">{leader.avatar}</div>
+                    <div>
+                      <h3 className="text-white font-bold">{leader.name}</h3>
+                      <p className="text-gray-400 text-sm">레벨 {leader.level} · 평점 {leader.rating}★</p>
+                    </div>
+                    <div className="ml-auto">
+                      <CheckCircle className="w-6 h-6 text-green-400" />
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">경험치: {leader.experience.toLocaleString()}</span>
+                    <span className="text-blue-400">생성: {leader.createdAt}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* 분야별 집계 */}
         <div className="mb-8">
           <div className="text-white font-bold mb-3">분야별 집계</div>
@@ -77,25 +228,8 @@ function NIMAExpertControlBox() {
             ))}
           </div>
         </div>
-        {/* 경고/이슈 */}
-        <div className="mb-8">
-          <div className="text-white font-bold mb-3">경고/이슈</div>
-          <div className="flex flex-col gap-2">
-            {dummyIssues.map((x, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 bg-red-500/10 border border-red-400/20 rounded-xl px-4 py-3"
-              >
-                <span className="text-2xl">⚠️</span>
-                <span className="text-white flex-1">{x.message}</span>
-                <button className="text-red-300 text-xs font-semibold px-3 py-1 rounded-xl bg-red-500/10 hover:bg-red-600/30 transition">
-                  {x.action}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-        {/* 명령/업데이트 */}
+
+        {/* 명령어 입력 */}
         <div className="mb-8">
           <div className="text-white font-bold mb-3">집단 명령/AI 업무지시</div>
           <div className="flex gap-2">
@@ -114,16 +248,68 @@ function NIMAExpertControlBox() {
             </button>
           </div>
         </div>
-        {/* AI대화/업무이력 */}
+
+        {/* 로그 */}
         <div>
           <div className="text-white font-bold mb-3">업데이트 기록/명령 이력</div>
-          <div className="bg-blue-900/30 rounded-xl text-blue-200 p-4 space-y-2 text-sm min-h-[48px]">
+          <div className="bg-blue-900/30 rounded-xl text-blue-200 p-4 space-y-2 text-sm min-h-[120px] max-h-60 overflow-y-auto">
             {log.map((x, i) => (
-              <div key={i}>{x}</div>
+              <div key={i} className="flex items-center gap-2">
+                {x.includes('생성 완료') && <Sparkles className="w-4 h-4 text-yellow-400" />}
+                {x.includes('명령:') && <Zap className="w-4 h-4 text-blue-400" />}
+                <span>{x}</span>
+              </div>
             ))}
           </div>
         </div>
       </div>
+
+      {/* 리나 생성 모달 */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-gray-900 to-blue-900 rounded-3xl p-8 border border-blue-500/30 max-w-md w-full">
+            <div className="text-center">
+              <div className="text-6xl mb-4 animate-bounce">{selectedLeader?.avatar}</div>
+              <h2 className="text-2xl font-bold text-white mb-2">{selectedLeader?.name}</h2>
+              <p className="text-blue-200 mb-6">AI 리나를 생성하고 있습니다...</p>
+              
+              <div className="w-full bg-gray-700 rounded-full h-3 mb-4 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 rounded-full"
+                  style={{ width: `${Math.min(generationProgress, 100)}%` }}
+                ></div>
+              </div>
+              
+              <div className="text-white font-bold text-lg mb-4">
+                {Math.round(generationProgress)}%
+              </div>
+
+              {isGenerating ? (
+                <div className="space-y-2 text-sm text-gray-300">
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                    신경망 구성 중...
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                    전문 지식 학습 중...
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    성격 패턴 생성 중...
+                  </div>
+                </div>
+              ) : (
+                <div className="text-green-400 font-bold flex items-center justify-center gap-2">
+                  <CheckCircle className="w-6 h-6" />
+                  생성 완료!
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="text-center text-blue-300 text-xs mt-6">
         실시간 자동 집계 · AI 분석 · 모바일/PC 동시 최적화
       </div>
@@ -131,4 +317,4 @@ function NIMAExpertControlBox() {
   );
 }
 
-export default NIMAExpertControlBox;
+export default NIMALeaderGeneration;
