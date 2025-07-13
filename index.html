@@ -1,96 +1,80 @@
-// 핵심 포인트: 
-// 1. 대화 메시지 자동 스크롤 
-// 2. 입력/버튼 하단 고정 
-// 3. 빈 공간 최소화, 대화 흐름 강조
+import React, { useState, useEffect } from "react";
 
-function NimaApp() {
-  const [input, setInput] = React.useState("");
-  const [messages, setMessages] = React.useState([
-    {type:"sys", content:"🎉 NIMA 분산AI 코치 시스템에 오신걸 환영합니다!<br>집단 업데이트로 10억명 자동 동기화를 체험해보세요.<br><span class='text-indigo-300'>예시: \"AI코치야, 유튜브 채널 성장 전략 알려줘\"</span>", timestamp:new Date().toLocaleTimeString()}
-  ]);
-  const [isUpdating, setIsUpdating] = React.useState(false);
-  const chatEndRef = React.useRef();
+const 핵심데이터예시 = [
+  {
+    id: 1,
+    type: "성과",
+    icon: "🚀",
+    text: "유튜브 영상 업로드 1,210,000건 (신기록!)",
+    highlight: true,
+    detail: "전일 대비 +21% 증가, AI 자동 편집 비중 67%",
+  },
+  {
+    id: 2,
+    type: "품질",
+    icon: "🏆",
+    text: "글로벌 번역 품질 랭킹 1위: 일본어 99.3점",
+    highlight: true,
+    detail: "신규 번역 AI 적용 효과, 미국 99.1, 베트남 98.9",
+  },
+  {
+    id: 3,
+    type: "AI특이사항",
+    icon: "✨",
+    text: "포지션 당구 신규 패턴 17건 발견",
+    highlight: false,
+    detail: "AI 자동 패턴 분석 신규 업로드",
+  },
+  {
+    id: 4,
+    type: "이슈",
+    icon: "⚠️",
+    text: "[긴급] 스페인 번역서버 지연 감지",
+    highlight: true,
+    detail: "AI 자동 알림, 평균 복구 예상 19분",
+  },
+  {
+    id: 5,
+    type: "전체 성공률",
+    icon: "💯",
+    text: "전체 성공률 99.7% (역대 최저 에러율 0.03%)",
+    highlight: false,
+    detail: "주간평균 99.3%, 일간 최저 에러 0.01%",
+  },
+];
 
-  // 자동 스크롤
-  React.useEffect(()=>{
-    chatEndRef.current?.scrollIntoView({behavior:'smooth'});
-  }, [messages]);
-
-  // 대표 NEMA 집단 업데이트
-  const sendGlobalUpdate = ()=>{
-    setIsUpdating(true);
-    setTimeout(()=>{
-      setMessages(msgs=>[...msgs, {
-        type:"update", content:"🛠️ <b>대표 NEMA 집단 업데이트</b> 실행!<br>10억명 AI 자동 동기화 완료.",
-        timestamp:new Date().toLocaleTimeString()
-      }]);
-      setIsUpdating(false);
-    }, 1200);
-  };
-
-  // 메시지 전송
-  const sendMessage = ()=>{
-    if(!input.trim()) return;
-    setMessages(msgs=>[...msgs, {
-      type:"user", content:input, timestamp:new Date().toLocaleTimeString()
-    }]);
-    setInput("");
-    setTimeout(()=>{
-      setMessages(msgs=>[...msgs, {
-        type:"ai",
-        content:`🤖 <b>[AI코치]</b> “${input}”에 대한 답변입니다.<br>유튜브, AI, 집단 업데이트 등 무엇이든 계속 질문해보세요!`,
-        timestamp:new Date().toLocaleTimeString()
-      }]);
-    }, 1200);
-  };
+function 핵심문컨트롤박스() {
+  const [핵심, set핵심] = useState([]);
+  useEffect(() => {
+    // 실제로는 AI가 중요/이슈 자동 추출해서 set핵심()
+    set핵심(핵심데이터예시.filter(x=>x.highlight));
+  }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900">
-      <header className="w-full px-5 py-4 bg-gradient-to-b from-blue-800/60 to-indigo-800/30 rounded-b-3xl shadow-xl">
-        <div className="text-2xl font-bold text-indigo-100 flex items-center gap-2">
-          <span className="w-7 h-7 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">🤖</span>
-          NIMA 분산AI 코치 시스템
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 to-blue-950 flex items-center justify-center">
+      <div className="w-full max-w-2xl bg-black/70 rounded-3xl shadow-2xl p-10 border border-blue-700/30">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-3xl">🔍</span>
+          <h1 className="text-2xl md:text-3xl font-bold text-white">오늘의 핵심문 (AI 자동)</h1>
         </div>
-        <div className="mt-1 text-indigo-200 text-xs font-medium">10억명 집단동기화 | AI코치 | 자동화 | 실시간 채팅</div>
-      </header>
-      <main className="flex-1 flex flex-col w-full max-w-lg mx-auto pt-1 px-3 pb-24">
-        <button onClick={sendGlobalUpdate}
-          className="w-full bg-gradient-to-r from-blue-400 to-blue-700 hover:from-green-500 hover:to-blue-500 text-white text-lg font-bold rounded-2xl px-3 py-4 mt-5 mb-3 shadow"
-          disabled={isUpdating}
-        >{isUpdating?"업데이트 중...":"대표 NEMA 집단 업데이트"}</button>
-        <div className="flex-1 overflow-y-auto bg-gray-900/80 rounded-3xl p-4 shadow border border-indigo-800/20">
-          {messages.map((msg,i)=>
-            <div key={i} className={`my-2 ${msg.type==="user"?"text-right":""}`}>
-              <span
-                className={
-                  msg.type==="user"?"inline-block bg-indigo-600 text-white px-4 py-2 rounded-2xl text-lg":
-                  msg.type==="ai"?"inline-block bg-gray-700 text-blue-200 px-4 py-2 rounded-2xl text-base":
-                  msg.type==="update"?"inline-block bg-green-500/90 text-white px-4 py-2 rounded-2xl text-base":
-                  "inline-block bg-gray-600/90 text-white px-4 py-2 rounded-2xl text-base"
-                }
-                dangerouslySetInnerHTML={{__html: msg.content}}
-              ></span>
-              <span className="block text-[11px] text-gray-400 mt-1">{msg.timestamp}</span>
+        <div className="space-y-5">
+          {핵심.map(item=>(
+            <div key={item.id} className="bg-blue-950/70 border border-blue-400/20 rounded-xl p-6 flex gap-5 items-center shadow hover:scale-105 transition">
+              <div className="text-4xl">{item.icon}</div>
+              <div>
+                <div className="text-white font-bold text-lg">{item.text}</div>
+                <div className="text-blue-300 text-sm mt-1">{item.detail}</div>
+              </div>
+              {item.type==="이슈" && (
+                <button className="ml-auto bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-xl shadow transition">즉시 확인/조치</button>
+              )}
             </div>
-          )}
-          <div ref={chatEndRef}></div>
+          ))}
         </div>
-      </main>
-      {/* 하단 입력창+전송버튼 절대 고정 */}
-      <div className="fixed left-0 bottom-0 w-full max-w-lg mx-auto flex gap-2 px-3 py-4 bg-gradient-to-r from-indigo-900/95 to-purple-900/90">
-        <input
-          type="text"
-          value={input}
-          onChange={e=>setInput(e.target.value)}
-          onKeyDown={e=>e.key==="Enter"&&sendMessage()}
-          className="flex-1 px-5 py-3 rounded-2xl bg-gray-800 text-white border border-indigo-700/40 outline-none text-base placeholder-gray-400"
-          placeholder="AI에게 무엇이든 질문하거나, 집단 업데이트를 눌러보세요!"
-        />
-        <button
-          onClick={sendMessage}
-          className="bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-blue-600 hover:to-indigo-600 px-7 py-3 rounded-2xl text-white font-bold shadow text-base"
-        >전송</button>
+        <div className="text-right mt-8 text-blue-200 text-sm">실시간 AI 자동 분석·집계</div>
       </div>
     </div>
   );
 }
+
+export default 핵심문컨트롤박스;
