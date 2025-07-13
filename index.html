@@ -1,80 +1,134 @@
 import React, { useState, useEffect } from "react";
 
-const 핵심데이터예시 = [
-  {
-    id: 1,
-    type: "성과",
-    icon: "🚀",
-    text: "유튜브 영상 업로드 1,210,000건 (신기록!)",
-    highlight: true,
-    detail: "전일 대비 +21% 증가, AI 자동 편집 비중 67%",
-  },
-  {
-    id: 2,
-    type: "품질",
-    icon: "🏆",
-    text: "글로벌 번역 품질 랭킹 1위: 일본어 99.3점",
-    highlight: true,
-    detail: "신규 번역 AI 적용 효과, 미국 99.1, 베트남 98.9",
-  },
-  {
-    id: 3,
-    type: "AI특이사항",
-    icon: "✨",
-    text: "포지션 당구 신규 패턴 17건 발견",
-    highlight: false,
-    detail: "AI 자동 패턴 분석 신규 업로드",
-  },
-  {
-    id: 4,
-    type: "이슈",
-    icon: "⚠️",
-    text: "[긴급] 스페인 번역서버 지연 감지",
-    highlight: true,
-    detail: "AI 자동 알림, 평균 복구 예상 19분",
-  },
-  {
-    id: 5,
-    type: "전체 성공률",
-    icon: "💯",
-    text: "전체 성공률 99.7% (역대 최저 에러율 0.03%)",
-    highlight: false,
-    detail: "주간평균 99.3%, 일간 최저 에러 0.01%",
-  },
+const dummyStats = [
+  { title: "🚀 영상 업로드", value: "1,200,000", change: "+8%", highlight: true },
+  { title: "🏆 번역 품질", value: "99.2점 (랭킹1위)", change: "", highlight: true },
+  { title: "⚠️ 스페인 서버 오류", value: "복구중", change: "", highlight: true },
 ];
 
-function 핵심문컨트롤박스() {
-  const [핵심, set핵심] = useState([]);
-  useEffect(() => {
-    // 실제로는 AI가 중요/이슈 자동 추출해서 set핵심()
-    set핵심(핵심데이터예시.filter(x=>x.highlight));
-  }, []);
+const dummyFields = [
+  { name: "유튜브", leader: 100, coach: 3500, users: "280만", score: 98.7 },
+  { name: "언어", leader: 60, coach: 2100, users: "190만", score: 99.3 },
+  { name: "헬스", leader: 28, coach: 780, users: "72만", score: 97.9 },
+  { name: "당구", leader: 21, coach: 400, users: "25만", score: 98.2 },
+];
 
+const dummyIssues = [
+  { message: "저작권 위반 2건", action: "즉시 확인" },
+  { message: "데이터 지연 감지", action: "자동 복구중" },
+];
+
+function NIMAExpertControlBox() {
+  const [command, setCommand] = useState("");
+  const [log, setLog] = useState([]);
+  useEffect(() => {
+    setLog([
+      "10:20 집단 업데이트 98% 완료",
+      "09:44 AI 자동복구(오류) 완료",
+      "09:15 품질 피드백 신규 정책 반영",
+    ]);
+  }, []);
+  const handleCommand = () => {
+    if (command.trim()) {
+      setLog([`${new Date().toLocaleTimeString()} 명령: ${command}`, ...log]);
+      setCommand("");
+    }
+  };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 to-blue-950 flex items-center justify-center">
-      <div className="w-full max-w-2xl bg-black/70 rounded-3xl shadow-2xl p-10 border border-blue-700/30">
-        <div className="flex items-center gap-3 mb-6">
-          <span className="text-3xl">🔍</span>
-          <h1 className="text-2xl md:text-3xl font-bold text-white">오늘의 핵심문 (AI 자동)</h1>
-        </div>
-        <div className="space-y-5">
-          {핵심.map(item=>(
-            <div key={item.id} className="bg-blue-950/70 border border-blue-400/20 rounded-xl p-6 flex gap-5 items-center shadow hover:scale-105 transition">
-              <div className="text-4xl">{item.icon}</div>
-              <div>
-                <div className="text-white font-bold text-lg">{item.text}</div>
-                <div className="text-blue-300 text-sm mt-1">{item.detail}</div>
-              </div>
-              {item.type==="이슈" && (
-                <button className="ml-auto bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-xl shadow transition">즉시 확인/조치</button>
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-blue-900 flex flex-col items-center py-8 px-2">
+      <div className="w-full max-w-2xl bg-black/80 rounded-3xl shadow-2xl p-8 border border-blue-700/30">
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-8 flex items-center gap-2">
+          🧑‍💼 전문가 컨트롤박스 <span className="text-blue-400 text-base font-normal">NIMA 본사</span>
+        </h1>
+        {/* 하이라이트 */}
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          {dummyStats.map((stat, i) => (
+            <div
+              key={i}
+              className={`flex-1 rounded-2xl p-5 text-white shadow transition ${
+                stat.highlight
+                  ? "bg-gradient-to-tr from-blue-700 via-purple-700 to-blue-500 border border-blue-400/40"
+                  : "bg-blue-900/50 border border-blue-400/10"
+              }`}
+            >
+              <div className="text-lg font-semibold mb-1">{stat.title}</div>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              {stat.change && (
+                <div className="text-green-300 font-medium">{stat.change}</div>
               )}
             </div>
           ))}
         </div>
-        <div className="text-right mt-8 text-blue-200 text-sm">실시간 AI 자동 분석·집계</div>
+        {/* 분야별 집계 */}
+        <div className="mb-8">
+          <div className="text-white font-bold mb-3">분야별 집계</div>
+          <div className="bg-blue-900/40 rounded-xl">
+            {dummyFields.map((f, i) => (
+              <div
+                key={i}
+                className="grid grid-cols-5 gap-2 px-5 py-3 text-sm border-b border-blue-800/40 last:border-0"
+              >
+                <div className="text-blue-300 font-semibold">{f.name}</div>
+                <div className="text-white">리나 {f.leader}</div>
+                <div className="text-white">코치 {f.coach}</div>
+                <div className="text-white">참여자 {f.users}</div>
+                <div className="text-blue-200 font-bold">품질 {f.score}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* 경고/이슈 */}
+        <div className="mb-8">
+          <div className="text-white font-bold mb-3">경고/이슈</div>
+          <div className="flex flex-col gap-2">
+            {dummyIssues.map((x, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 bg-red-500/10 border border-red-400/20 rounded-xl px-4 py-3"
+              >
+                <span className="text-2xl">⚠️</span>
+                <span className="text-white flex-1">{x.message}</span>
+                <button className="text-red-300 text-xs font-semibold px-3 py-1 rounded-xl bg-red-500/10 hover:bg-red-600/30 transition">
+                  {x.action}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* 명령/업데이트 */}
+        <div className="mb-8">
+          <div className="text-white font-bold mb-3">집단 명령/AI 업무지시</div>
+          <div className="flex gap-2">
+            <input
+              className="flex-1 rounded-xl px-4 py-3 text-white bg-blue-950/70 border border-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={command}
+              onChange={(e) => setCommand(e.target.value)}
+              placeholder="명령어 입력(예: 썸네일 품질분석 집단업데이트)"
+              onKeyDown={(e) => e.key === "Enter" && handleCommand()}
+            />
+            <button
+              onClick={handleCommand}
+              className="rounded-xl px-6 py-3 font-semibold bg-gradient-to-tr from-blue-600 to-purple-600 text-white hover:from-blue-500 hover:to-purple-500 transition"
+            >
+              명령 배포
+            </button>
+          </div>
+        </div>
+        {/* AI대화/업무이력 */}
+        <div>
+          <div className="text-white font-bold mb-3">업데이트 기록/명령 이력</div>
+          <div className="bg-blue-900/30 rounded-xl text-blue-200 p-4 space-y-2 text-sm min-h-[48px]">
+            {log.map((x, i) => (
+              <div key={i}>{x}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="text-center text-blue-300 text-xs mt-6">
+        실시간 자동 집계 · AI 분석 · 모바일/PC 동시 최적화
       </div>
     </div>
   );
 }
 
-export default 핵심문컨트롤박스;
+export default NIMAExpertControlBox;
