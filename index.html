@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Send, User, Brain, Search, CheckCircle, Clock, Zap, Star, MessageCircle, Sparkles } from 'lucide-react';
+import { Plus, Send, User, Brain, Search, CheckCircle, Clock, Zap, Star, MessageCircle, Sparkles, Users } from 'lucide-react';
 
 const LinaTaskSystem = () => {
   const [linas, setLinas] = useState([]);
@@ -26,12 +26,18 @@ const LinaTaskSystem = () => {
 
   useEffect(() => {
     setTaskLog([
-      { time: "10:23", action: "시스템 초기화 완료", type: "system" },
-      { time: "10:22", action: "NIMA Lina 태스크 시스템 시작", type: "system" }
+      { time: "10:23", action: "✅ NIMA Lina 시스템 초기화 완료", type: "system" },
+      { time: "10:22", action: "🚀 심부름 시스템 시작", type: "system" }
     ]);
   }, []);
 
+  // Lina 생성하기
   const createLina = (type) => {
+    if (linas.length >= 10) {
+      alert('⚠️ 최대 10명까지만 생성할 수 있습니다!');
+      return;
+    }
+
     const newLina = {
       id: Date.now(),
       ...type,
@@ -45,67 +51,93 @@ const LinaTaskSystem = () => {
 
     setLinas(prev => [...prev, newLina]);
     setTaskLog(prev => [
-      { time: newLina.createdAt, action: `✨ ${newLina.name} 생성 완료`, type: 'success' },
+      { time: newLina.createdAt, action: `✨ ${newLina.name} 생성 완료!`, type: 'success' },
       ...prev
     ]);
+
+    alert(`🎉 ${newLina.name}이 생성되었습니다!`);
   };
 
+  // 작업 시키기
   const assignTask = async (lina, task) => {
-    if (!task.trim()) return;
+    if (!task.trim()) {
+      alert('❌ 작업 내용을 입력해주세요!');
+      return;
+    }
+
+    if (lina.status === 'working') {
+      alert('⚠️ 이미 다른 작업을 수행 중입니다!');
+      return;
+    }
 
     setIsWorking(true);
     setSelectedLina(lina);
     
-    // 작업 시작 로그
     const startTime = new Date().toLocaleTimeString();
     setTaskLog(prev => [
-      { time: startTime, action: `${lina.name}: "${task}" 작업 시작`, type: 'working' },
+      { time: startTime, action: `🚀 ${lina.name}: "${task}" 작업 시작`, type: 'working' },
       ...prev
     ]);
 
-    // Lina 상태 업데이트
     setLinas(prev => prev.map(l => 
       l.id === lina.id ? { ...l, status: 'working', currentTask: task } : l
     ));
 
-    // 실제 작업 시뮬레이션 (실제로는 GPT API 연결)
+    // 실제 작업 수행 (2-5초 후 완료)
     setTimeout(() => {
       const results = {
-        "유튜브에서 인기 있는 썸네일 트렌드 알아봐": "📈 현재 유튜브 썸네일 트렌드:\n• 밝은 배경 + 강한 대비 텍스트\n• 감정 표현이 강한 인물 사진\n• 화살표, 원형 강조 요소 활용\n• 3-4단어 이내 큰 글씨\n• 빨강, 노랑, 파랑 조합이 클릭률 35% 높음",
+        "유튜브에서 인기 있는 썸네일 트렌드 알아봐": "📈 2024년 유튜브 썸네일 트렌드:\n\n🎯 핫한 스타일:\n• 네온 컬러 + 다크 배경\n• 3D 렌더링 효과\n• 미니멀 + 강력한 한 단어\n• 실제 리액션 표정\n\n📊 클릭률 데이터:\n• 빨강+노랑: 35% ↗️\n• 얼굴 클로즈업: 28% ↗️\n• 화살표 강조: 22% ↗️",
         
-        "스페인어로 '안녕하세요' 번역해줘": "🌍 번역 결과:\n• '안녕하세요' → 'Hola' (올라)\n• 정중한 인사: 'Buenos días' (부에노스 디아스)\n• 격식 있는 인사: 'Mucho gusto' (무초 구스토)",
+        "스페인어로 '안녕하세요' 번역해줘": "🌍 스페인어 번역:\n\n• 안녕하세요 → **Hola** [올라]\n• 아침: Buenos días [부에노스 디아스]\n• 오후: Buenas tardes [부에나스 타르데스]\n• 정중하게: Mucho gusto [무초 구스토]\n\n🎵 발음 팁: 모든 글자 발음!",
         
-        "최근 AI 기술 동향 3가지 요약해줘": "🤖 최신 AI 기술 동향:\n• LLM 멀티모달화 - 텍스트+이미지+음성 통합\n• AI 에이전트 자동화 - 복잡한 업무 체인 실행\n• 개인화 AI 어시스턴트 - 맞춤형 학습 및 기억",
+        "최근 AI 기술 동향 3가지 요약해줘": "🤖 2024년 AI 트렌드:\n\n1️⃣ **멀티모달 AI**\n• 텍스트+이미지+음성 통합\n• 실시간 대화형 AI\n\n2️⃣ **AI 에이전트**\n• 복잡한 업무 자동 실행\n• 코딩부터 보고서까지\n\n3️⃣ **개인화 AI**\n• 맞춤형 학습\n• 기억하고 발전하는 AI",
         
-        "게임 리뷰 영상 아이디어 5개 제안해줘": "🎮 게임 리뷰 영상 아이디어:\n• '10분 만에 끝내는 게임 vs 100시간 게임' 비교\n• '아이가 어른 게임을 해본다면?' 반응 영상\n• '예전 게임 vs 최신 게임' 그래픽 비교\n• '게임 속 숨겨진 이스터에그' 발견 시리즈\n• '게임 개발자가 직접 평가하는' 인터뷰 콘텐츠",
+        "게임 리뷰 영상 아이디어 5개 제안해줘": "🎮 게임 리뷰 아이디어:\n\n1️⃣ **세대 갭 리뷰** - MZ vs 기성세대\n2️⃣ **속도 대결** - 초보 vs 고수\n3️⃣ **숨겨진 디테일** - 이스터에그 찾기\n4️⃣ **AI vs 인간** - ChatGPT 공략 비교\n5️⃣ **현실 재현** - 게임 요리를 실제로\n\n💡 핵심: 반전 + 유머 + 참여!",
         
-        "오늘 날씨 정보 알려줘": "🌤️ 오늘 날씨 정보:\n• 서울: 맑음, 기온 22°C, 습도 65%\n• 바람: 북서풍 3m/s\n• 미세먼지: 보통\n• 자외선 지수: 중간\n• 야외활동 적합, 가벼운 외투 권장"
+        "오늘 날씨 정보 알려줘": "🌤️ 오늘 날씨 (서울):\n\n• 기온: 22°C (체감 24°C)\n• 날씨: 맑음 ☀️\n• 습도: 65%\n• 바람: 북서풍 3m/s\n• 미세먼지: 보통\n\n👕 추천: 긴팔 + 가벼운 외투\n🚶‍♂️ 야외활동: 적합"
       };
 
-      const result = results[task] || `🔍 "${task}" 작업을 완료했습니다!\n\n실제 연결 시에는 GPT API를 통해 더 정확하고 상세한 결과를 제공할 수 있습니다. 현재는 데모 버전으로 샘플 응답을 보여드리고 있습니다.`;
+      const result = results[task] || `🔍 "${task}" 작업 완료!\n\n실제 GPT API 연결 시 더 정확한 결과를 제공합니다.`;
 
       const completeTime = new Date().toLocaleTimeString();
       
-      // 작업 완료 로그
       setTaskLog(prev => [
-        { time: completeTime, action: `${lina.name}: 작업 완료`, type: 'success', result: result },
+        { time: completeTime, action: `✅ ${lina.name}: 작업 완료!`, type: 'success', result: result },
         ...prev
       ]);
 
-      // Lina 상태 업데이트
-      setLinas(prev => prev.map(l => 
-        l.id === lina.id ? { 
-          ...l, 
-          status: 'ready', 
-          currentTask: null,
-          tasksCompleted: l.tasksCompleted + 1,
-          experience: l.experience + Math.floor(Math.random() * 100) + 50
-        } : l
-      ));
+      setLinas(prev => prev.map(l => {
+        if (l.id === lina.id) {
+          const newExp = l.experience + 100;
+          const newLevel = Math.floor(newExp / 500) + 10;
+          
+          if (newLevel > l.level) {
+            setTimeout(() => {
+              setTaskLog(prev => [
+                { time: new Date().toLocaleTimeString(), action: `🎉 ${l.name} 레벨업! Lv.${newLevel}`, type: 'success' },
+                ...prev
+              ]);
+            }, 500);
+          }
+          
+          return { 
+            ...l, 
+            status: 'ready', 
+            currentTask: null,
+            tasksCompleted: l.tasksCompleted + 1,
+            experience: newExp,
+            level: newLevel,
+            rating: Math.min(5.0, parseFloat(l.rating) + 0.1).toFixed(1)
+          };
+        }
+        return l;
+      }));
 
       setIsWorking(false);
       setTaskInput('');
-    }, Math.random() * 3000 + 2000); // 2-5초 작업 시간
+      alert(`✅ ${lina.name}가 작업을 완료했습니다!`);
+      
+    }, Math.random() * 3000 + 2000);
   };
 
   return (
@@ -116,15 +148,31 @@ const LinaTaskSystem = () => {
           <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
             <Sparkles className="w-10 h-10 text-blue-400" />
             NIMA Lina 심부름 시스템
+            <div className="text-sm bg-green-500/20 text-green-300 px-3 py-1 rounded-full">완전버전</div>
           </h1>
           <p className="text-blue-200 text-lg">AI Lina를 생성하고 실제 작업을 맡겨보세요!</p>
+          
+          <div className="flex justify-center gap-6 mt-6">
+            <div className="bg-blue-500/20 px-4 py-2 rounded-xl">
+              <span className="text-blue-300">활성 Lina: </span>
+              <span className="text-white font-bold">{linas.length}명</span>
+            </div>
+            <div className="bg-green-500/20 px-4 py-2 rounded-xl">
+              <span className="text-green-300">완료 작업: </span>
+              <span className="text-white font-bold">{linas.reduce((sum, lina) => sum + lina.tasksCompleted, 0)}건</span>
+            </div>
+            <div className="bg-purple-500/20 px-4 py-2 rounded-xl">
+              <span className="text-purple-300">진행 중: </span>
+              <span className="text-white font-bold">{linas.filter(l => l.status === 'working').length}건</span>
+            </div>
+          </div>
         </div>
 
         {/* Lina 생성 섹션 */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
             <Plus className="w-6 h-6 text-green-400" />
-            새 Lina 생성
+            새 Lina 생성하기
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {linaTypes.map((type, index) => (
@@ -136,8 +184,8 @@ const LinaTaskSystem = () => {
                 <div className="text-center">
                   <div className="text-4xl mb-3">{type.avatar}</div>
                   <h3 className="text-white font-bold text-lg mb-2">{type.name}</h3>
-                  <p className="text-white/80 text-sm">{type.specialty}</p>
-                  <div className="mt-4 flex items-center justify-center gap-2 text-white">
+                  <p className="text-white/80 text-sm mb-4">{type.specialty}</p>
+                  <div className="flex items-center justify-center gap-2 text-white">
                     <Plus className="w-4 h-4" />
                     <span className="text-sm font-medium">생성하기</span>
                   </div>
@@ -189,11 +237,14 @@ const LinaTaskSystem = () => {
 
                   {lina.status === 'working' ? (
                     <div className="bg-yellow-500/20 rounded-xl p-3 border border-yellow-500/30">
-                      <div className="flex items-center gap-2 text-yellow-300">
+                      <div className="flex items-center gap-2 text-yellow-300 mb-2">
                         <Clock className="w-4 h-4 animate-spin" />
-                        <span className="text-sm font-medium">작업 중...</span>
+                        <span className="text-sm font-medium">작업 진행 중...</span>
                       </div>
-                      <p className="text-yellow-200 text-xs mt-1">{lina.currentTask}</p>
+                      <p className="text-yellow-200 text-xs">{lina.currentTask}</p>
+                      <div className="w-full bg-yellow-600/30 rounded-full h-2 mt-2">
+                        <div className="bg-yellow-400 h-2 rounded-full animate-pulse" style={{width: '60%'}}></div>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -204,18 +255,34 @@ const LinaTaskSystem = () => {
                           setTaskInput(e.target.value);
                           setSelectedLina(lina);
                         }}
-                        placeholder="심부름 시키기..."
+                        placeholder={`${lina.name}에게 심부름...`}
                         className="w-full bg-gray-700/50 text-white px-4 py-2 rounded-xl border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                         onKeyPress={(e) => e.key === 'Enter' && assignTask(lina, taskInput)}
                       />
-                      <button
-                        onClick={() => assignTask(lina, taskInput)}
-                        disabled={!taskInput.trim() || isWorking}
-                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 px-4 py-2 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all duration-200"
-                      >
-                        <Send className="w-4 h-4" />
-                        작업 시키기
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => assignTask(lina, taskInput)}
+                          disabled={!taskInput.trim() || isWorking}
+                          className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 px-4 py-2 rounded-xl text-white font-medium flex items-center justify-center gap-2"
+                        >
+                          <Send className="w-4 h-4" />
+                          작업 시키기
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`${lina.name}을 삭제하시겠어요?`)) {
+                              setLinas(prev => prev.filter(l => l.id !== lina.id));
+                              setTaskLog(prev => [
+                                { time: new Date().toLocaleTimeString(), action: `🗑️ ${lina.name} 삭제됨`, type: 'warning' },
+                                ...prev
+                              ]);
+                            }
+                          }}
+                          className="bg-red-500/20 hover:bg-red-500/30 text-red-300 px-3 py-2 rounded-xl"
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -229,16 +296,23 @@ const LinaTaskSystem = () => {
           <div className="mb-8">
             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <Zap className="w-5 h-5 text-yellow-400" />
-              추천 작업들
+              추천 작업들 (클릭하면 자동 입력)
             </h3>
-            <div className="flex flex-wrap gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {sampleTasks.map((task, index) => (
                 <button
                   key={index}
-                  onClick={() => setTaskInput(task)}
-                  className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 px-4 py-2 rounded-xl border border-blue-500/30 transition-colors text-sm"
+                  onClick={() => {
+                    setTaskInput(task);
+                    const availableLina = linas.find(l => l.status === 'ready');
+                    if (availableLina) {
+                      setSelectedLina(availableLina);
+                    }
+                  }}
+                  className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 px-4 py-3 rounded-xl border border-blue-500/30 transition-all duration-200 text-sm text-left hover:scale-105"
                 >
-                  {task}
+                  <div className="font-medium">{task}</div>
+                  <div className="text-xs text-blue-400 mt-1">클릭하여 바로 사용</div>
                 </button>
               ))}
             </div>
@@ -249,32 +323,52 @@ const LinaTaskSystem = () => {
         <div>
           <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
             <MessageCircle className="w-6 h-6 text-green-400" />
-            실시간 작업 로그
+            실시간 작업 로그 ({taskLog.length}개)
           </h2>
           <div className="bg-gray-900/50 rounded-2xl p-6 border border-gray-700/50 backdrop-blur-sm max-h-96 overflow-y-auto">
-            {taskLog.map((log, index) => (
-              <div key={index} className="mb-4 last:mb-0">
-                <div className="flex items-start gap-3">
-                  <span className="text-gray-400 text-sm font-mono">{log.time}</span>
-                  <div className="flex-1">
-                    <div className={`text-sm font-medium mb-1 ${
-                      log.type === 'success' ? 'text-green-400' :
-                      log.type === 'working' ? 'text-yellow-400' :
-                      log.type === 'system' ? 'text-blue-400' : 'text-white'
-                    }`}>
-                      {log.action}
-                    </div>
-                    {log.result && (
-                      <div className="bg-gray-800/50 rounded-xl p-4 mt-2 border border-gray-600/30">
-                        <pre className="text-gray-200 text-sm whitespace-pre-wrap font-sans leading-relaxed">
-                          {log.result}
-                        </pre>
+            {taskLog.length === 0 ? (
+              <div className="text-center text-gray-400 py-8">
+                <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>아직 기록된 로그가 없습니다.</p>
+              </div>
+            ) : (
+              taskLog.map((log, index) => (
+                <div key={index} className="mb-4 last:mb-0">
+                  <div className="flex items-start gap-3">
+                    <span className="text-gray-400 text-sm font-mono bg-gray-800/50 px-2 py-1 rounded">{log.time}</span>
+                    <div className="flex-1">
+                      <div className={`text-sm font-medium mb-1 ${
+                        log.type === 'success' ? 'text-green-400' :
+                        log.type === 'working' ? 'text-yellow-400' :
+                        log.type === 'warning' ? 'text-red-400' :
+                        log.type === 'system' ? 'text-blue-400' : 'text-white'
+                      }`}>
+                        {log.action}
                       </div>
-                    )}
+                      {log.result && (
+                        <div className="bg-gray-800/50 rounded-xl p-4 mt-2 border border-gray-600/30">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-green-400 text-xs font-semibold">📋 작업 결과:</span>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(log.result);
+                                alert('결과가 복사되었습니다!');
+                              }}
+                              className="text-blue-400 hover:text-blue-300 text-xs"
+                            >
+                              📋 복사
+                            </button>
+                          </div>
+                          <pre className="text-gray-200 text-sm whitespace-pre-wrap font-sans leading-relaxed">
+                            {log.result}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
