@@ -1,204 +1,95 @@
-<!--
-  완전 자동화 NIMA (리마) 분산 AI 시스템
-  - 복붙 한방: Github Pages, Vercel, Netlify 어디든 바로 배포 가능
-  - P2P 분산 동기화, AI 코치, 채팅, 음성 입력까지!
-  - 10억명 업데이트도 한 번에 동기화
--->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
   <title>NIMA 분산 AI 코치 시스템</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Tailwind CDN for 디자인 (다크/라이트) -->
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- React & ReactDOM CDN (최신) -->
+  <!-- React/ReactDOM CDN -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <!-- OrbitDB & IPFS Core: 분산 DB/CDN용 (브라우저 전용) -->
-  <script src="https://cdn.jsdelivr.net/npm/ipfs-core/dist/index.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/orbit-db/dist/orbitdb.min.js"></script>
+  <!-- Babel Standalone for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body class="bg-gradient-to-br from-gray-900 to-indigo-900 min-h-screen flex flex-col">
   <div id="root" class="flex-1 flex flex-col"></div>
-  <script type="text/javascript">
-    // ---- 핵심 코드: NIMA 분산 AI 시스템 ----
-
-    const { useState, useEffect, useRef } = React;
-
-    // 분산DB (IPFS+OrbitDB) 커스텀 훅
-    function useDistributedDB(setSystemStatus) {
-      const [db, setDb] = useState(null);
-      const [nodeId, setNodeId] = useState("...");
-      const [messages, setMessages] = useState([]);
-      useEffect(() => {
-        (async () => {
-          // 1. IPFS+OrbitDB 브라우저 노드 생성 (완전 분산)
-          const ipfs = await window.IpfsCore.create();
-          const orbitdb = await OrbitDB.createInstance(ipfs);
-          const nodeid = (await ipfs.id()).id;
-          setNodeId(nodeid.slice(0,16)+"...");
-          setSystemStatus(prev=>({...prev, isOnline:true, nodeId: nodeid.slice(0,16)+"..."}));
-          // 2. 글로벌 메시지/업데이트 eventlog
-          const chatDB = await orbitdb.eventlog("nima-global-chat");
-          await chatDB.load();
-          setDb(chatDB);
-          // 3. 메시지 실시간 동기화
-          const update = () => {
-            const msgs = chatDB.iterator({ limit: 80 }).collect().map(e=>e.payload.value);
-            setMessages(msgs);
-            setSystemStatus(prev=>({...prev, totalMessages: msgs.length}));
-          };
-          chatDB.events.on("replicated", update);
-          chatDB.events.on("write", update);
-          update();
-        })();
-      }, []);
-      // 4. 메시지 전송 함수
-      const sendMessage = async (content, type="user") => {
-        if(db && content) {
-          await db.add({
-            id: Date.now(),
-            from: nodeId,
-            content, type,
-            timestamp: new Date().toLocaleString("ko-KR")
-          });
-        }
-      };
-      return { nodeId, messages, sendMessage };
-    }
-
-    // 음성인식 (WebSpeech API)
-    function useVoiceInput(onResult) {
-      const [isListening, setIsListening] = useState(false);
-      const recognitionRef = useRef();
-      const start = () => {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if(!SpeechRecognition) return alert("음성인식 미지원");
-        const rec = new SpeechRecognition();
-        rec.lang = "ko-KR";
-        rec.onresult = (e) => {
-          const txt = Array.from(e.results).map(r=>r[0].transcript).join("");
-          onResult(txt);
-          setIsListening(false);
-        };
-        rec.onend = () => setIsListening(false);
-        rec.start();
-        setIsListening(true);
-        recognitionRef.current = rec;
-      };
-      const stop = () => {
-        recognitionRef.current?.stop();
-        setIsListening(false);
-      };
-      return { isListening, start, stop };
-    }
-
-    // NIMA 메인 앱
+  <script type="text/babel">
+    // 메인 NIMA 분산 AI UI (모바일 최적화)
     function NimaApp() {
-      const [systemStatus, setSystemStatus] = useState({
-        isOnline: false, nodeId: "...", totalMessages: 0
-      });
-      const [input, setInput] = useState("");
-      const [isUpdating, setIsUpdating] = useState(false);
-      const { nodeId, messages, sendMessage } = useDistributedDB(setSystemStatus);
-      const { isListening, start, stop } = useVoiceInput(txt=>setInput(txt));
-
-      // "대표 NEMA" 집단 업데이트 명령 (ex: 새벽3시 자동/수동)
-      const sendGlobalUpdate = async () => {
+      const [input, setInput] = React.useState("");
+      const [messages, setMessages] = React.useState([
+        {type: "sys", content: "🚀 NIMA 분산AI 시스템에 오신 걸 환영합니다!", timestamp: new Date().toLocaleTimeString("ko-KR")}
+      ]);
+      const [isUpdating, setIsUpdating] = React.useState(false);
+      // 대표 집단 업데이트 시뮬레이션
+      const sendGlobalUpdate = () => {
         setIsUpdating(true);
-        await sendMessage("🛠️ 대표 NEMA 집단 업데이트! (모든 리마/AI/코치 즉시 최신화)", "update");
-        setIsUpdating(false);
+        setTimeout(()=>{
+          setMessages(msgs=>[...msgs, {type:"update", content:"🛠️ 대표 NEMA 집단 업데이트 실행! (10억 동기화)", timestamp: new Date().toLocaleTimeString("ko-KR")}]);
+          setIsUpdating(false);
+        }, 1200);
       };
-
-      // AI 코치 자동 응답 (간단 시뮬레이션)
-      const aiCoachRespond = async (lastMsg) => {
-        if(lastMsg && lastMsg.type === "user") {
-          setTimeout(()=>{
-            sendMessage("🤖 [AI코치] 답변: \""+lastMsg.content.slice(0,30)+"...\" 에 대한 전문 조언을 제공합니다!", "ai");
-          }, 1500);
-        }
+      const sendMessage = () => {
+        if(input.trim() === "") return;
+        setMessages(msgs=>[...msgs, {type:"user", content:input, timestamp: new Date().toLocaleTimeString("ko-KR")}]);
+        setInput("");
+        setTimeout(()=>{
+          setMessages(msgs=>[...msgs, {type:"ai", content:"🤖 [AI코치] "+msgs[msgs.length].content+"에 대해 조언을 드립니다.", timestamp: new Date().toLocaleTimeString("ko-KR")}]);
+        }, 1200);
       };
-      useEffect(()=>{
-        if(messages.length>0) {
-          const lastMsg = messages[messages.length-1];
-          if(lastMsg.type==="user") aiCoachRespond(lastMsg);
-        }
-      }, [messages]);
-
       return (
-        <div className="flex flex-col h-screen items-center justify-center">
-          {/* 상단 바 */}
-          <header className="w-full flex items-center justify-between px-8 py-4 bg-black/20 border-b border-blue-900 shadow-lg">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl text-indigo-400 font-bold">NIMA</span>
-              <span className="text-sm text-gray-300">분산 AI/코치/음성 시스템</span>
-            </div>
-            <div className="flex items-center gap-4 text-xs text-gray-400">
-              <span>노드ID: <span className="font-bold text-indigo-300">{nodeId}</span></span>
-              <span className={systemStatus.isOnline?"text-green-400":"text-red-400"}>{systemStatus.isOnline?"온라인":"오프라인"}</span>
-            </div>
+        <div className="flex flex-col min-h-screen items-center justify-center">
+          <header className="w-full flex items-center justify-between px-6 py-3 bg-black/30 border-b border-indigo-800">
+            <span className="text-xl text-indigo-400 font-bold">NIMA</span>
+            <span className="text-xs text-gray-300">분산 AI/코치/채팅 시스템</span>
           </header>
-          {/* 메인 컨텐츠 */}
-          <main className="flex-1 flex flex-col w-full max-w-2xl p-8 space-y-4">
+          <main className="flex-1 w-full max-w-lg mx-auto p-4 flex flex-col">
             {/* 집단 업데이트 버튼 */}
-            <div className="flex gap-3 items-center">
-              <button
-                onClick={sendGlobalUpdate}
+            <div className="flex gap-2 mb-2">
+              <button onClick={sendGlobalUpdate}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-4 py-2 font-semibold shadow text-sm"
                 disabled={isUpdating}
-                className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-blue-600 hover:to-indigo-600 text-white rounded-xl px-6 py-3 font-bold shadow transition-all"
-              >
-                {isUpdating ? "업데이트 중..." : "대표 NEMA 집단 업데이트"}
-              </button>
-              <button
-                onClick={isListening ? stop : start}
-                className={`ml-2 px-4 py-3 rounded-xl text-white font-medium shadow ${isListening ? "bg-red-500 animate-pulse" : "bg-gray-700 hover:bg-gray-600"}`}
-              >
-                {isListening ? "음성 중지" : "음성 입력"}
-              </button>
+              >{isUpdating?"업데이트 중...":"대표 NEMA 집단 업데이트"}</button>
             </div>
             {/* 메시지 리스트 */}
-            <div className="flex-1 bg-gray-900/60 rounded-2xl p-4 mt-2 shadow-inner overflow-y-auto min-h-[360px] max-h-[420px]">
-              {messages.length === 0 ?
-                <div className="text-gray-400 text-center pt-20">아직 메시지가 없습니다. 대표 NEMA 집단 업데이트로 시작해보세요!</div>
-                :
-                messages.map((msg, i) => (
-                  <div key={i} className={`flex ${msg.type==="user"?"justify-end":"justify-start"} my-2`}>
-                    <div className={`px-4 py-2 rounded-2xl max-w-xs ${msg.type==="user" ? "bg-indigo-600 text-white ml-auto":"bg-gray-700/70 text-blue-200"}`}>
-                      <div className="text-sm">{msg.content}</div>
-                      <div className="text-xs mt-1 text-right opacity-60">{msg.timestamp}</div>
-                    </div>
-                  </div>
-                ))
-              }
+            <div className="flex-1 bg-gray-800/70 rounded-xl p-3 mb-2 overflow-y-auto max-h-[380px] min-h-[220px] shadow">
+              {messages.map((msg,i)=>
+                <div key={i} className={`my-2 ${msg.type==="user"?"text-right":""}`}>
+                  <span className={
+                    msg.type==="user"?"inline-block bg-indigo-500 text-white px-3 py-1 rounded-2xl":
+                    msg.type==="ai"?"inline-block bg-gray-700 text-blue-200 px-3 py-1 rounded-2xl":
+                    msg.type==="update"?"inline-block bg-green-500/80 text-white px-3 py-1 rounded-2xl":
+                    "inline-block bg-gray-600 text-white px-3 py-1 rounded-2xl"
+                  }>
+                    {msg.content}
+                  </span>
+                  <span className="block text-[10px] text-gray-400 mt-1">{msg.timestamp}</span>
+                </div>
+              )}
             </div>
             {/* 입력창 */}
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2">
               <input
                 type="text"
                 value={input}
                 onChange={e=>setInput(e.target.value)}
-                onKeyDown={e=>{if(e.key==="Enter") sendMessage(input)}}
-                className="flex-1 px-5 py-3 rounded-xl bg-gray-800 text-white placeholder-gray-400 border border-gray-700 outline-none"
-                placeholder="메시지/명령을 입력하세요..."
+                onKeyDown={e=>e.key==="Enter"&&sendMessage()}
+                className="flex-1 px-4 py-2 rounded-lg bg-gray-900 text-white border border-gray-700 outline-none"
+                placeholder="메시지를 입력하세요..."
               />
               <button
-                onClick={()=>sendMessage(input)}
-                className="bg-indigo-500 hover:bg-indigo-400 px-5 py-3 rounded-xl text-white font-bold shadow"
-              >
-                전송
-              </button>
+                onClick={sendMessage}
+                className="bg-indigo-500 hover:bg-indigo-400 px-4 py-2 rounded-lg text-white font-bold"
+              >전송</button>
             </div>
           </main>
-          {/* 푸터 */}
-          <footer className="w-full text-center text-xs text-gray-400 py-4 border-t border-blue-900">
-            NIMA 분산AI 시스템 ⓒ 2024 | 집단동기화·무한생성·AI코치·음성 | "새벽 3시 10억명 동기화"
+          <footer className="w-full text-center text-xs text-gray-400 py-3 border-t border-indigo-800">
+            NIMA 분산AI 시스템 ⓒ 2024 | "새벽 3시 10억명 동기화"
           </footer>
         </div>
       );
     }
-
-    // 렌더링
     ReactDOM.createRoot(document.getElementById("root")).render(<NimaApp />);
   </script>
 </body>
