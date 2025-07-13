@@ -1,379 +1,516 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Send, User, Brain, Search, CheckCircle, Clock, Zap, Star, MessageCircle, Sparkles, Users } from 'lucide-react';
-
-const LinaTaskSystem = () => {
-  const [linas, setLinas] = useState([]);
-  const [taskInput, setTaskInput] = useState('');
-  const [selectedLina, setSelectedLina] = useState(null);
-  const [taskLog, setTaskLog] = useState([]);
-  const [isWorking, setIsWorking] = useState(false);
-
-  const linaTypes = [
-    { name: "리서치 전문가", avatar: "🔍", color: "from-blue-600 to-cyan-600", specialty: "정보 조사 및 분석" },
-    { name: "콘텐츠 크리에이터", avatar: "🎨", color: "from-purple-600 to-pink-600", specialty: "창작 및 기획" },
-    { name: "데이터 분석가", avatar: "📊", color: "from-green-600 to-emerald-600", specialty: "수치 분석 및 통계" },
-    { name: "언어 번역가", avatar: "🌍", color: "from-orange-600 to-red-600", specialty: "다국어 번역 및 소통" },
-    { name: "기술 전문가", avatar: "💻", color: "from-indigo-600 to-purple-600", specialty: "기술 문서 및 코딩" }
-  ];
-
-  const sampleTasks = [
-    "유튜브에서 인기 있는 썸네일 트렌드 알아봐",
-    "스페인어로 '안녕하세요' 번역해줘",
-    "최근 AI 기술 동향 3가지 요약해줘",
-    "게임 리뷰 영상 아이디어 5개 제안해줘",
-    "오늘 날씨 정보 알려줘"
-  ];
-
-  useEffect(() => {
-    setTaskLog([
-      { time: "10:23", action: "✅ NIMA Lina 시스템 초기화 완료", type: "system" },
-      { time: "10:22", action: "🚀 심부름 시스템 시작", type: "system" }
-    ]);
-  }, []);
-
-  // Lina 생성하기
-  const createLina = (type) => {
-    if (linas.length >= 10) {
-      alert('⚠️ 최대 10명까지만 생성할 수 있습니다!');
-      return;
-    }
-
-    const newLina = {
-      id: Date.now(),
-      ...type,
-      level: Math.floor(Math.random() * 20) + 10,
-      experience: Math.floor(Math.random() * 5000) + 1000,
-      tasksCompleted: Math.floor(Math.random() * 50),
-      rating: (Math.random() * 1 + 4).toFixed(1),
-      status: 'ready',
-      createdAt: new Date().toLocaleTimeString()
-    };
-
-    setLinas(prev => [...prev, newLina]);
-    setTaskLog(prev => [
-      { time: newLina.createdAt, action: `✨ ${newLina.name} 생성 완료!`, type: 'success' },
-      ...prev
-    ]);
-
-    alert(`🎉 ${newLina.name}이 생성되었습니다!`);
-  };
-
-  // 작업 시키기
-  const assignTask = async (lina, task) => {
-    if (!task.trim()) {
-      alert('❌ 작업 내용을 입력해주세요!');
-      return;
-    }
-
-    if (lina.status === 'working') {
-      alert('⚠️ 이미 다른 작업을 수행 중입니다!');
-      return;
-    }
-
-    setIsWorking(true);
-    setSelectedLina(lina);
-    
-    const startTime = new Date().toLocaleTimeString();
-    setTaskLog(prev => [
-      { time: startTime, action: `🚀 ${lina.name}: "${task}" 작업 시작`, type: 'working' },
-      ...prev
-    ]);
-
-    setLinas(prev => prev.map(l => 
-      l.id === lina.id ? { ...l, status: 'working', currentTask: task } : l
-    ));
-
-    // 실제 작업 수행 (2-5초 후 완료)
-    setTimeout(() => {
-      const results = {
-        "유튜브에서 인기 있는 썸네일 트렌드 알아봐": "📈 2024년 유튜브 썸네일 트렌드:\n\n🎯 핫한 스타일:\n• 네온 컬러 + 다크 배경\n• 3D 렌더링 효과\n• 미니멀 + 강력한 한 단어\n• 실제 리액션 표정\n\n📊 클릭률 데이터:\n• 빨강+노랑: 35% ↗️\n• 얼굴 클로즈업: 28% ↗️\n• 화살표 강조: 22% ↗️",
-        
-        "스페인어로 '안녕하세요' 번역해줘": "🌍 스페인어 번역:\n\n• 안녕하세요 → **Hola** [올라]\n• 아침: Buenos días [부에노스 디아스]\n• 오후: Buenas tardes [부에나스 타르데스]\n• 정중하게: Mucho gusto [무초 구스토]\n\n🎵 발음 팁: 모든 글자 발음!",
-        
-        "최근 AI 기술 동향 3가지 요약해줘": "🤖 2024년 AI 트렌드:\n\n1️⃣ **멀티모달 AI**\n• 텍스트+이미지+음성 통합\n• 실시간 대화형 AI\n\n2️⃣ **AI 에이전트**\n• 복잡한 업무 자동 실행\n• 코딩부터 보고서까지\n\n3️⃣ **개인화 AI**\n• 맞춤형 학습\n• 기억하고 발전하는 AI",
-        
-        "게임 리뷰 영상 아이디어 5개 제안해줘": "🎮 게임 리뷰 아이디어:\n\n1️⃣ **세대 갭 리뷰** - MZ vs 기성세대\n2️⃣ **속도 대결** - 초보 vs 고수\n3️⃣ **숨겨진 디테일** - 이스터에그 찾기\n4️⃣ **AI vs 인간** - ChatGPT 공략 비교\n5️⃣ **현실 재현** - 게임 요리를 실제로\n\n💡 핵심: 반전 + 유머 + 참여!",
-        
-        "오늘 날씨 정보 알려줘": "🌤️ 오늘 날씨 (서울):\n\n• 기온: 22°C (체감 24°C)\n• 날씨: 맑음 ☀️\n• 습도: 65%\n• 바람: 북서풍 3m/s\n• 미세먼지: 보통\n\n👕 추천: 긴팔 + 가벼운 외투\n🚶‍♂️ 야외활동: 적합"
-      };
-
-      const result = results[task] || `🔍 "${task}" 작업 완료!\n\n실제 GPT API 연결 시 더 정확한 결과를 제공합니다.`;
-
-      const completeTime = new Date().toLocaleTimeString();
-      
-      setTaskLog(prev => [
-        { time: completeTime, action: `✅ ${lina.name}: 작업 완료!`, type: 'success', result: result },
-        ...prev
-      ]);
-
-      setLinas(prev => prev.map(l => {
-        if (l.id === lina.id) {
-          const newExp = l.experience + 100;
-          const newLevel = Math.floor(newExp / 500) + 10;
-          
-          if (newLevel > l.level) {
-            setTimeout(() => {
-              setTaskLog(prev => [
-                { time: new Date().toLocaleTimeString(), action: `🎉 ${l.name} 레벨업! Lv.${newLevel}`, type: 'success' },
-                ...prev
-              ]);
-            }, 500);
-          }
-          
-          return { 
-            ...l, 
-            status: 'ready', 
-            currentTask: null,
-            tasksCompleted: l.tasksCompleted + 1,
-            experience: newExp,
-            level: newLevel,
-            rating: Math.min(5.0, parseFloat(l.rating) + 0.1).toFixed(1)
-          };
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIMA Lina 심부름 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a, #1e3a8a, #7c3aed);
+            min-height: 100vh;
         }
-        return l;
-      }));
-
-      setIsWorking(false);
-      setTaskInput('');
-      alert(`✅ ${lina.name}가 작업을 완료했습니다!`);
-      
-    }, Math.random() * 3000 + 2000);
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-blue-950 to-purple-950 p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* 헤더 */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
-            <Sparkles className="w-10 h-10 text-blue-400" />
-            NIMA Lina 심부름 시스템
-            <div className="text-sm bg-green-500/20 text-green-300 px-3 py-1 rounded-full">완전버전</div>
-          </h1>
-          <p className="text-blue-200 text-lg">AI Lina를 생성하고 실제 작업을 맡겨보세요!</p>
-          
-          <div className="flex justify-center gap-6 mt-6">
-            <div className="bg-blue-500/20 px-4 py-2 rounded-xl">
-              <span className="text-blue-300">활성 Lina: </span>
-              <span className="text-white font-bold">{linas.length}명</span>
-            </div>
-            <div className="bg-green-500/20 px-4 py-2 rounded-xl">
-              <span className="text-green-300">완료 작업: </span>
-              <span className="text-white font-bold">{linas.reduce((sum, lina) => sum + lina.tasksCompleted, 0)}건</span>
-            </div>
-            <div className="bg-purple-500/20 px-4 py-2 rounded-xl">
-              <span className="text-purple-300">진행 중: </span>
-              <span className="text-white font-bold">{linas.filter(l => l.status === 'working').length}건</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Lina 생성 섹션 */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-            <Plus className="w-6 h-6 text-green-400" />
-            새 Lina 생성하기
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {linaTypes.map((type, index) => (
-              <div
-                key={index}
-                onClick={() => createLina(type)}
-                className={`bg-gradient-to-br ${type.color} rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl border border-white/20`}
-              >
-                <div className="text-center">
-                  <div className="text-4xl mb-3">{type.avatar}</div>
-                  <h3 className="text-white font-bold text-lg mb-2">{type.name}</h3>
-                  <p className="text-white/80 text-sm mb-4">{type.specialty}</p>
-                  <div className="flex items-center justify-center gap-2 text-white">
-                    <Plus className="w-4 h-4" />
-                    <span className="text-sm font-medium">생성하기</span>
-                  </div>
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+        .gradient-blue { background: linear-gradient(135deg, #2563eb, #06b6d4); }
+        .gradient-purple { background: linear-gradient(135deg, #9333ea, #ec4899); }
+        .gradient-green { background: linear-gradient(135deg, #059669, #10b981); }
+        .gradient-orange { background: linear-gradient(135deg, #ea580c, #ef4444); }
+        .gradient-indigo { background: linear-gradient(135deg, #4f46e5, #9333ea); }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-6xl mx-auto">
+        <!-- 헤더 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
+                ✨ NIMA Lina 심부름 시스템
+                <span class="text-sm bg-green-500/20 text-green-300 px-3 py-1 rounded-full border border-green-500/30">HTML버전</span>
+            </h1>
+            <p class="text-blue-200 text-lg">AI Lina를 생성하고 실제 작업을 맡겨보세요!</p>
+            
+            <div class="flex justify-center gap-6 mt-6">
+                <div class="bg-blue-500/20 px-4 py-2 rounded-xl border border-blue-500/30">
+                    <span class="text-blue-300">활성 Lina: </span>
+                    <span class="text-white font-bold" id="linasCount">0명</span>
                 </div>
-              </div>
-            ))}
-          </div>
+                <div class="bg-green-500/20 px-4 py-2 rounded-xl border border-green-500/30">
+                    <span class="text-green-300">완료 작업: </span>
+                    <span class="text-white font-bold" id="completedCount">0건</span>
+                </div>
+                <div class="bg-purple-500/20 px-4 py-2 rounded-xl border border-purple-500/30">
+                    <span class="text-purple-300">진행 중: </span>
+                    <span class="text-white font-bold" id="workingCount">0건</span>
+                </div>
+            </div>
         </div>
 
-        {/* 생성된 Lina들 */}
-        {linas.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-              <User className="w-6 h-6 text-blue-400" />
-              활동 중인 Lina들 ({linas.length}명)
+        <!-- Lina 생성 섹션 -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                ➕ 새 Lina 생성하기
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {linas.map((lina) => (
-                <div key={lina.id} className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 backdrop-blur-sm">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="text-3xl">{lina.avatar}</div>
-                    <div className="flex-1">
-                      <h3 className="text-white font-bold text-lg">{lina.name}</h3>
-                      <p className="text-gray-400 text-sm">{lina.specialty}</p>
-                    </div>
-                    <div className={`w-3 h-3 rounded-full ${
-                      lina.status === 'working' ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'
-                    }`}></div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                    <div>
-                      <span className="text-gray-400">레벨:</span>
-                      <span className="text-white font-bold ml-2">{lina.level}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">평점:</span>
-                      <span className="text-yellow-400 font-bold ml-2">{lina.rating}★</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">완료:</span>
-                      <span className="text-blue-400 font-bold ml-2">{lina.tasksCompleted}건</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">경험치:</span>
-                      <span className="text-purple-400 font-bold ml-2">{lina.experience.toLocaleString()}</span>
-                    </div>
-                  </div>
-
-                  {lina.status === 'working' ? (
-                    <div className="bg-yellow-500/20 rounded-xl p-3 border border-yellow-500/30">
-                      <div className="flex items-center gap-2 text-yellow-300 mb-2">
-                        <Clock className="w-4 h-4 animate-spin" />
-                        <span className="text-sm font-medium">작업 진행 중...</span>
-                      </div>
-                      <p className="text-yellow-200 text-xs">{lina.currentTask}</p>
-                      <div className="w-full bg-yellow-600/30 rounded-full h-2 mt-2">
-                        <div className="bg-yellow-400 h-2 rounded-full animate-pulse" style={{width: '60%'}}></div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        value={selectedLina?.id === lina.id ? taskInput : ''}
-                        onChange={(e) => {
-                          setTaskInput(e.target.value);
-                          setSelectedLina(lina);
-                        }}
-                        placeholder={`${lina.name}에게 심부름...`}
-                        className="w-full bg-gray-700/50 text-white px-4 py-2 rounded-xl border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                        onKeyPress={(e) => e.key === 'Enter' && assignTask(lina, taskInput)}
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => assignTask(lina, taskInput)}
-                          disabled={!taskInput.trim() || isWorking}
-                          className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:opacity-50 px-4 py-2 rounded-xl text-white font-medium flex items-center justify-center gap-2"
-                        >
-                          <Send className="w-4 h-4" />
-                          작업 시키기
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm(`${lina.name}을 삭제하시겠어요?`)) {
-                              setLinas(prev => prev.filter(l => l.id !== lina.id));
-                              setTaskLog(prev => [
-                                { time: new Date().toLocaleTimeString(), action: `🗑️ ${lina.name} 삭제됨`, type: 'warning' },
-                                ...prev
-                              ]);
-                            }
-                          }}
-                          className="bg-red-500/20 hover:bg-red-500/30 text-red-300 px-3 py-2 rounded-xl"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4" id="linaTypes">
+                <!-- JavaScript로 생성됨 -->
             </div>
-          </div>
-        )}
-
-        {/* 추천 작업들 */}
-        {linas.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <Zap className="w-5 h-5 text-yellow-400" />
-              추천 작업들 (클릭하면 자동 입력)
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {sampleTasks.map((task, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setTaskInput(task);
-                    const availableLina = linas.find(l => l.status === 'ready');
-                    if (availableLina) {
-                      setSelectedLina(availableLina);
-                    }
-                  }}
-                  className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 px-4 py-3 rounded-xl border border-blue-500/30 transition-all duration-200 text-sm text-left hover:scale-105"
-                >
-                  <div className="font-medium">{task}</div>
-                  <div className="text-xs text-blue-400 mt-1">클릭하여 바로 사용</div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 작업 로그 */}
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-            <MessageCircle className="w-6 h-6 text-green-400" />
-            실시간 작업 로그 ({taskLog.length}개)
-          </h2>
-          <div className="bg-gray-900/50 rounded-2xl p-6 border border-gray-700/50 backdrop-blur-sm max-h-96 overflow-y-auto">
-            {taskLog.length === 0 ? (
-              <div className="text-center text-gray-400 py-8">
-                <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>아직 기록된 로그가 없습니다.</p>
-              </div>
-            ) : (
-              taskLog.map((log, index) => (
-                <div key={index} className="mb-4 last:mb-0">
-                  <div className="flex items-start gap-3">
-                    <span className="text-gray-400 text-sm font-mono bg-gray-800/50 px-2 py-1 rounded">{log.time}</span>
-                    <div className="flex-1">
-                      <div className={`text-sm font-medium mb-1 ${
-                        log.type === 'success' ? 'text-green-400' :
-                        log.type === 'working' ? 'text-yellow-400' :
-                        log.type === 'warning' ? 'text-red-400' :
-                        log.type === 'system' ? 'text-blue-400' : 'text-white'
-                      }`}>
-                        {log.action}
-                      </div>
-                      {log.result && (
-                        <div className="bg-gray-800/50 rounded-xl p-4 mt-2 border border-gray-600/30">
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="text-green-400 text-xs font-semibold">📋 작업 결과:</span>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(log.result);
-                                alert('결과가 복사되었습니다!');
-                              }}
-                              className="text-blue-400 hover:text-blue-300 text-xs"
-                            >
-                              📋 복사
-                            </button>
-                          </div>
-                          <pre className="text-gray-200 text-sm whitespace-pre-wrap font-sans leading-relaxed">
-                            {log.result}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
         </div>
-      </div>
-    </div>
-  );
-};
 
-export default LinaTaskSystem;
+        <!-- 생성된 Lina들 -->
+        <div class="mb-8" id="linasSection" style="display: none;">
+            <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                👤 활동 중인 Lina들 (<span id="linasCountText">0</span>명)
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="linasContainer">
+                <!-- JavaScript로 생성됨 -->
+            </div>
+        </div>
+
+        <!-- 추천 작업들 -->
+        <div class="mb-8" id="tasksSection" style="display: none;">
+            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                ⚡ 추천 작업들 (클릭하면 자동 입력)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="sampleTasks">
+                <!-- JavaScript로 생성됨 -->
+            </div>
+        </div>
+
+        <!-- 작업 로그 -->
+        <div>
+            <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                💬 실시간 작업 로그 (<span id="logCount">2</span>개)
+            </h2>
+            <div class="bg-gray-900/50 rounded-2xl p-6 border border-gray-700/50 backdrop-blur-sm max-h-96 overflow-y-auto">
+                <div id="taskLog">
+                    <div class="mb-4">
+                        <div class="flex items-start gap-3">
+                            <span class="text-gray-400 text-sm font-mono bg-gray-800/50 px-2 py-1 rounded">11:28</span>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-blue-400">✅ NIMA Lina 시스템 초기화 완료</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="flex items-start gap-3">
+                            <span class="text-gray-400 text-sm font-mono bg-gray-800/50 px-2 py-1 rounded">11:27</span>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-blue-400">🚀 심부름 시스템 시작</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수들
+        let linas = [];
+        let taskInput = '';
+        let selectedLina = null;
+        let taskLog = [];
+        let isWorking = false;
+
+        // Lina 타입들
+        const linaTypes = [
+            { name: "리서치 전문가", avatar: "🔍", color: "gradient-blue", specialty: "정보 조사 및 분석" },
+            { name: "콘텐츠 크리에이터", avatar: "🎨", color: "gradient-purple", specialty: "창작 및 기획" },
+            { name: "데이터 분석가", avatar: "📊", color: "gradient-green", specialty: "수치 분석 및 통계" },
+            { name: "언어 번역가", avatar: "🌍", color: "gradient-orange", specialty: "다국어 번역 및 소통" },
+            { name: "기술 전문가", avatar: "💻", color: "gradient-indigo", specialty: "기술 문서 및 코딩" }
+        ];
+
+        // 추천 작업들
+        const sampleTasks = [
+            "유튜브에서 인기 있는 썸네일 트렌드 알아봐",
+            "스페인어로 '안녕하세요' 번역해줘",
+            "최근 AI 기술 동향 3가지 요약해줘",
+            "게임 리뷰 영상 아이디어 5개 제안해줘",
+            "오늘 날씨 정보 알려줘"
+        ];
+
+        // 현재 시간 가져오기
+        function getCurrentTime() {
+            return new Date().toLocaleTimeString('ko-KR');
+        }
+
+        // 상태 업데이트
+        function updateStats() {
+            document.getElementById('linasCount').textContent = linas.length + '명';
+            document.getElementById('linasCountText').textContent = linas.length;
+            document.getElementById('completedCount').textContent = linas.reduce((sum, lina) => sum + lina.tasksCompleted, 0) + '건';
+            document.getElementById('workingCount').textContent = linas.filter(l => l.status === 'working').length + '건';
+            document.getElementById('logCount').textContent = taskLog.length;
+        }
+
+        // Lina 생성
+        function createLina(type) {
+            if (linas.length >= 10) {
+                alert('⚠️ 최대 10명까지만 생성할 수 있습니다!');
+                return;
+            }
+
+            const newLina = {
+                id: Date.now(),
+                ...type,
+                level: Math.floor(Math.random() * 20) + 10,
+                experience: Math.floor(Math.random() * 5000) + 1000,
+                tasksCompleted: Math.floor(Math.random() * 50),
+                rating: (Math.random() * 1 + 4).toFixed(1),
+                status: 'ready',
+                createdAt: getCurrentTime()
+            };
+
+            linas.push(newLina);
+            
+            addLog(`✨ ${newLina.name} 생성 완료!`, 'success');
+            
+            renderLinas();
+            renderSampleTasks();
+            updateStats();
+            
+            alert(`🎉 ${newLina.name}이 생성되었습니다!`);
+        }
+
+        // 작업 할당
+        function assignTask(lina, task) {
+            if (!task.trim()) {
+                alert('❌ 작업 내용을 입력해주세요!');
+                return;
+            }
+
+            if (lina.status === 'working') {
+                alert('⚠️ 이미 다른 작업을 수행 중입니다!');
+                return;
+            }
+
+            isWorking = true;
+            addLog(`🚀 ${lina.name}: "${task}" 작업 시작`, 'working');
+
+            // Lina 상태 업데이트
+            lina.status = 'working';
+            lina.currentTask = task;
+            renderLinas();
+            updateStats();
+
+            // 작업 수행 (2-5초 후 완료)
+            setTimeout(() => {
+                const results = {
+                    "유튜브에서 인기 있는 썸네일 트렌드 알아봐": "📈 2024년 유튜브 썸네일 트렌드:\n\n🎯 핫한 스타일:\n• 네온 컬러 + 다크 배경\n• 3D 렌더링 효과\n• 미니멀 + 강력한 한 단어\n• 실제 리액션 표정\n\n📊 클릭률 데이터:\n• 빨강+노랑: 35% ↗️\n• 얼굴 클로즈업: 28% ↗️\n• 화살표 강조: 22% ↗️",
+                    
+                    "스페인어로 '안녕하세요' 번역해줘": "🌍 스페인어 번역:\n\n• 안녕하세요 → **Hola** [올라]\n• 아침: Buenos días [부에노스 디아스]\n• 오후: Buenas tardes [부에나스 타르데스]\n• 정중하게: Mucho gusto [무초 구스토]\n\n🎵 발음 팁: 모든 글자 발음!",
+                    
+                    "최근 AI 기술 동향 3가지 요약해줘": "🤖 2024년 AI 트렌드:\n\n1️⃣ **멀티모달 AI**\n• 텍스트+이미지+음성 통합\n• 실시간 대화형 AI\n\n2️⃣ **AI 에이전트**\n• 복잡한 업무 자동 실행\n• 코딩부터 보고서까지\n\n3️⃣ **개인화 AI**\n• 맞춤형 학습\n• 기억하고 발전하는 AI",
+                    
+                    "게임 리뷰 영상 아이디어 5개 제안해줘": "🎮 게임 리뷰 아이디어:\n\n1️⃣ **세대 갭 리뷰** - MZ vs 기성세대\n2️⃣ **속도 대결** - 초보 vs 고수\n3️⃣ **숨겨진 디테일** - 이스터에그 찾기\n4️⃣ **AI vs 인간** - ChatGPT 공략 비교\n5️⃣ **현실 재현** - 게임 요리를 실제로\n\n💡 핵심: 반전 + 유머 + 참여!",
+                    
+                    "오늘 날씨 정보 알려줘": "🌤️ 오늘 날씨 (서울):\n\n• 기온: 22°C (체감 24°C)\n• 날씨: 맑음 ☀️\n• 습도: 65%\n• 바람: 북서풍 3m/s\n• 미세먼지: 보통\n\n👕 추천: 긴팔 + 가벼운 외투\n🚶‍♂️ 야외활동: 적합"
+                };
+
+                const result = results[task] || `🔍 "${task}" 작업 완료!\n\n실제 GPT API 연결 시 더 정확한 결과를 제공합니다.`;
+
+                addLog(`✅ ${lina.name}: 작업 완료!`, 'success', result);
+
+                // Lina 상태 업데이트
+                const newExp = lina.experience + 100;
+                const newLevel = Math.floor(newExp / 500) + 10;
+                
+                if (newLevel > lina.level) {
+                    setTimeout(() => {
+                        addLog(`🎉 ${lina.name} 레벨업! Lv.${newLevel}`, 'success');
+                    }, 500);
+                }
+
+                lina.status = 'ready';
+                lina.currentTask = null;
+                lina.tasksCompleted += 1;
+                lina.experience = newExp;
+                lina.level = newLevel;
+                lina.rating = Math.min(5.0, parseFloat(lina.rating) + 0.1).toFixed(1);
+
+                renderLinas();
+                updateStats();
+                isWorking = false;
+                
+                alert(`✅ ${lina.name}가 작업을 완료했습니다!`);
+                
+            }, Math.random() * 3000 + 2000);
+        }
+
+        // 로그 추가
+        function addLog(action, type, result = null) {
+            const logEntry = {
+                time: getCurrentTime(),
+                action: action,
+                type: type,
+                result: result
+            };
+            
+            taskLog.unshift(logEntry);
+            renderLog();
+            updateStats();
+        }
+
+        // Lina 타입 렌더링
+        function renderLinaTypes() {
+            const container = document.getElementById('linaTypes');
+            container.innerHTML = '';
+            
+            linaTypes.forEach((type, index) => {
+                const div = document.createElement('div');
+                div.className = `${type.color} rounded-2xl p-6 cursor-pointer transition-all duration-300 hover-scale border border-white/20`;
+                div.onclick = () => createLina(type);
+                
+                div.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-4xl mb-3">${type.avatar}</div>
+                        <h3 class="text-white font-bold text-lg mb-2">${type.name}</h3>
+                        <p class="text-white/80 text-sm mb-4">${type.specialty}</p>
+                        <div class="flex items-center justify-center gap-2 text-white">
+                            ➕ <span class="text-sm font-medium">생성하기</span>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+
+        // Lina들 렌더링
+        function renderLinas() {
+            const section = document.getElementById('linasSection');
+            const container = document.getElementById('linasContainer');
+            
+            if (linas.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            container.innerHTML = '';
+            
+            linas.forEach(lina => {
+                const div = document.createElement('div');
+                div.className = 'bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50 backdrop-blur-sm';
+                
+                const statusDot = lina.status === 'working' ? 'bg-yellow-400 animate-pulse' : 'bg-green-400';
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="text-3xl">${lina.avatar}</div>
+                        <div class="flex-1">
+                            <h3 class="text-white font-bold text-lg">${lina.name}</h3>
+                            <p class="text-gray-400 text-sm">${lina.specialty}</p>
+                        </div>
+                        <div class="w-3 h-3 rounded-full ${statusDot}"></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                        <div>
+                            <span class="text-gray-400">레벨:</span>
+                            <span class="text-white font-bold ml-2">${lina.level}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">평점:</span>
+                            <span class="text-yellow-400 font-bold ml-2">${lina.rating}★</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">완료:</span>
+                            <span class="text-blue-400 font-bold ml-2">${lina.tasksCompleted}건</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">경험치:</span>
+                            <span class="text-purple-400 font-bold ml-2">${lina.experience.toLocaleString()}</span>
+                        </div>
+                    </div>
+
+                    ${lina.status === 'working' ? `
+                        <div class="bg-yellow-500/20 rounded-xl p-3 border border-yellow-500/30">
+                            <div class="flex items-center gap-2 text-yellow-300 mb-2">
+                                <div class="w-4 h-4 animate-spin">🔄</div>
+                                <span class="text-sm font-medium">작업 진행 중...</span>
+                            </div>
+                            <p class="text-yellow-200 text-xs">${lina.currentTask}</p>
+                            <div class="w-full bg-yellow-600/30 rounded-full h-2 mt-2">
+                                <div class="bg-yellow-400 h-2 rounded-full animate-pulse" style="width: 60%"></div>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="space-y-3">
+                            <input
+                                type="text"
+                                id="input-${lina.id}"
+                                placeholder="${lina.name}에게 심부름..."
+                                class="w-full bg-gray-700/50 text-white px-4 py-2 rounded-xl border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                onkeypress="if(event.key==='Enter') assignTaskFromInput(${lina.id})"
+                            />
+                            <div class="flex gap-2">
+                                <button
+                                    onclick="assignTaskFromInput(${lina.id})"
+                                    class="flex-1 gradient-blue hover:opacity-80 px-4 py-2 rounded-xl text-white font-medium flex items-center justify-center gap-2 transition-all duration-200"
+                                >
+                                    📤 작업 시키기
+                                </button>
+                                <button
+                                    onclick="deleteLina(${lina.id})"
+                                    class="bg-red-500/20 hover:bg-red-500/30 text-red-300 px-3 py-2 rounded-xl transition-colors"
+                                >
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    `}
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+
+        // 추천 작업들 렌더링
+        function renderSampleTasks() {
+            const section = document.getElementById('tasksSection');
+            const container = document.getElementById('sampleTasks');
+            
+            if (linas.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            container.innerHTML = '';
+            
+            sampleTasks.forEach((task, index) => {
+                const button = document.createElement('button');
+                button.className = 'bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 px-4 py-3 rounded-xl border border-blue-500/30 transition-all duration-200 text-sm text-left hover-scale';
+                button.onclick = () => setTaskToFirstAvailableLina(task);
+                
+                button.innerHTML = `
+                    <div class="font-medium">${task}</div>
+                    <div class="text-xs text-blue-400 mt-1">클릭하여 바로 사용</div>
+                `;
+                
+                container.appendChild(button);
+            });
+        }
+
+        // 로그 렌더링
+        function renderLog() {
+            const container = document.getElementById('taskLog');
+            container.innerHTML = '';
+            
+            taskLog.forEach(log => {
+                const div = document.createElement('div');
+                div.className = 'mb-4';
+                
+                const typeColors = {
+                    'success': 'text-green-400',
+                    'working': 'text-yellow-400',
+                    'warning': 'text-red-400',
+                    'system': 'text-blue-400'
+                };
+                
+                div.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <span class="text-gray-400 text-sm font-mono bg-gray-800/50 px-2 py-1 rounded">${log.time}</span>
+                        <div class="flex-1">
+                            <div class="text-sm font-medium ${typeColors[log.type] || 'text-white'}">${log.action}</div>
+                            ${log.result ? `
+                                <div class="bg-gray-800/50 rounded-xl p-4 mt-2 border border-gray-600/30">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="text-green-400 text-xs font-semibold">📋 작업 결과:</span>
+                                        <button onclick="copyToClipboard('${log.result.replace(/'/g, "\\'")}'); alert('결과가 복사되었습니다!')" class="text-blue-400 hover:text-blue-300 text-xs">📋 복사</button>
+                                    </div>
+                                    <pre class="text-gray-200 text-sm whitespace-pre-wrap font-sans leading-relaxed">${log.result}</pre>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+
+        // 입력값으로 작업 할당
+        function assignTaskFromInput(linaId) {
+            const input = document.getElementById(`input-${linaId}`);
+            const task = input.value.trim();
+            const lina = linas.find(l => l.id === linaId);
+            
+            if (lina && task) {
+                assignTask(lina, task);
+                input.value = '';
+            }
+        }
+
+        // Lina 삭제
+        function deleteLina(linaId) {
+            const lina = linas.find(l => l.id === linaId);
+            if (lina && confirm(`${lina.name}을 삭제하시겠어요?`)) {
+                linas = linas.filter(l => l.id !== linaId);
+                addLog(`🗑️ ${lina.name} 삭제됨`, 'warning');
+                renderLinas();
+                renderSampleTasks();
+                updateStats();
+            }
+        }
+
+        // 첫 번째 가능한 Lina에게 작업 할당
+        function setTaskToFirstAvailableLina(task) {
+            const availableLina = linas.find(l => l.status === 'ready');
+            if (availableLina) {
+                const input = document.getElementById(`input-${availableLina.id}`);
+                if (input) {
+                    input.value = task;
+                    input.focus();
+                }
+            } else {
+                alert('⚠️ 대기 중인 Lina가 없습니다! 먼저 Lina를 생성해주세요.');
+            }
+        }
+
+        // 클립보드에 복사
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).catch(() => {
+                // 클립보드 API가 지원되지 않는 경우 대체 방법
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            });
+        }
+
+        // 초기화
+        function init() {
+            addLog('✅ NIMA Lina 시스템 초기화 완료', 'system');
+            addLog('🚀 심부름 시스템 시작', 'system');
+            
+            renderLinaTypes();
+            renderLinas();
+            renderSampleTasks();
+            renderLog();
+            updateStats();
+        }
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
