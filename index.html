@@ -5,118 +5,157 @@
   <title>RIMA 유튜브 자동 업로드</title>
   <style>
     body {
-      font-family: sans-serif;
-      padding: 20px;
-      font-size: 18px;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      padding: 40px;
+      font-size: 20px;
       line-height: 1.6;
-      background-color: #f9f9f9;
     }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
     h1 {
       font-size: 26px;
-      color: #222;
       margin-bottom: 10px;
+      color: #222;
     }
-    button, input[type="file"], input[type="text"], textarea, select {
-      font-size: 18px;
-      padding: 12px;
+
+    label {
+      font-weight: bold;
+      margin-top: 20px;
+      display: block;
+    }
+
+    input[type="text"],
+    textarea,
+    select {
       width: 100%;
-      margin-bottom: 20px;
-      border-radius: 6px;
+      padding: 12px;
+      margin-top: 8px;
+      border-radius: 8px;
       border: 1px solid #ccc;
+      font-size: 18px;
     }
+
+    input[type="file"] {
+      margin-top: 8px;
+      font-size: 18px;
+    }
+
     button {
+      width: 100%;
+      padding: 14px;
+      font-size: 18px;
+      font-weight: bold;
       background-color: #e50914;
       color: white;
       border: none;
+      border-radius: 10px;
+      margin-top: 25px;
       cursor: pointer;
     }
+
     button:hover {
       background-color: #c40812;
     }
+
     .youtube-button {
-      background-color: #ff0000;
-      color: white;
-      font-weight: bold;
+      background-color: #FF0000;
+      margin-top: 15px;
     }
-    .youtube-button:hover {
-      background-color: #cc0000;
-    }
-    .section {
-      background: white;
+
+    .log-display {
+      background: #f0f0f0;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
+      border-radius: 12px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      margin-top: 10px;
     }
-    pre {
-      background: #eee;
-      padding: 15px;
-      border-radius: 6px;
-      overflow-x: auto;
+
+    .section-title {
+      margin-top: 40px;
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 5px;
+      font-size: 24px;
+      color: #333;
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h1>📺 RIMA 유튜브 자동 업로드 도우미</h1>
 
-<div class="section">
-  <h1>📺 유튜브 스튜디오로 이동</h1>
-  <button class="youtube-button" onclick="window.open('https://studio.youtube.com/', '_blank')">
-    유튜브 스튜디오 열기
-  </button>
-</div>
+    <button class="youtube-button" onclick="window.open('https://studio.youtube.com/', '_blank')">
+      ▶ 유튜브 스튜디오 바로가기
+    </button>
 
-<div class="section">
-  <h1>🔴 기록 모드 - 업로드 정보 입력</h1>
-  <form id="uploadForm">
-    <input type="text" name="title" placeholder="제목을 입력하세요">
-    <textarea name="description" rows="4" placeholder="설명을 입력하세요"></textarea>
-    <label>썸네일 선택:</label>
-    <input type="file" name="thumbnail">
-    <label>영상 파일 선택:</label>
-    <input type="file" name="video">
-    <label>공개 설정:</label>
-    <select name="privacy">
-      <option value="public">공개</option>
-      <option value="unlisted">일부공개</option>
-      <option value="private">비공개</option>
-    </select>
-    <button type="submit">기록 저장하기 (upload_log.json)</button>
-  </form>
-</div>
+    <div class="section-title">🔴 기록 모드: 유튜브 업로드 정보 입력</div>
 
-<div class="section">
-  <h1>🟢 재생 모드 - 기록된 내용 불러오기</h1>
-  <input type="file" id="logInput" accept=".json">
-  <pre id="logDisplay">여기에 기록된 업로드 내용이 표시됩니다.</pre>
-</div>
+    <form id="uploadForm">
+      <label>제목:</label>
+      <input type="text" name="title" required>
 
-<script>
-  document.getElementById('uploadForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const form = new FormData(e.target);
-    const record = {
-      title: form.get('title'),
-      description: form.get('description'),
-      thumbnail: form.get('thumbnail')?.name || '',
-      video: form.get('video')?.name || '',
-      privacy: form.get('privacy')
-    };
-    const blob = new Blob([JSON.stringify(record, null, 2)], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'upload_log.json';
-    link.click();
-  });
+      <label>설명:</label>
+      <textarea name="description" rows="4" required></textarea>
 
-  document.getElementById('logInput').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = function() {
-      document.getElementById('logDisplay').textContent = reader.result;
-    };
-    reader.readAsText(file);
-  });
-</script>
+      <label>썸네일 파일:</label>
+      <input type="file" name="thumbnail" accept="image/*">
 
+      <label>영상 파일:</label>
+      <input type="file" name="video" accept="video/*">
+
+      <label>공개 설정:</label>
+      <select name="privacy">
+        <option value="public">공개</option>
+        <option value="unlisted">일부공개</option>
+        <option value="private">비공개</option>
+      </select>
+
+      <button type="submit">💾 업로드 기록 저장 (upload_log.json)</button>
+    </form>
+
+    <div class="section-title">🟢 재생 모드: 기록 불러오기 및 자동 업로드</div>
+
+    <label>upload_log.json 파일 불러오기:</label>
+    <input type="file" id="logInput" accept=".json">
+
+    <div class="log-display" id="logDisplay">여기에 기록 내용이 표시됩니다...</div>
+  </div>
+
+  <script>
+    document.getElementById('uploadForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      const record = {
+        title: form.get('title'),
+        description: form.get('description'),
+        thumbnail: form.get('thumbnail')?.name || '',
+        video: form.get('video')?.name || '',
+        privacy: form.get('privacy')
+      };
+      const blob = new Blob([JSON.stringify(record, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'upload_log.json';
+      link.click();
+    });
+
+    document.getElementById('logInput').addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function () {
+        document.getElementById('logDisplay').textContent = reader.result;
+      };
+      reader.readAsText(file);
+    });
+  </script>
 </body>
 </html>
