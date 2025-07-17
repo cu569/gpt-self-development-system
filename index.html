@@ -3,23 +3,89 @@
 <head>
   <meta charset="UTF-8">
   <title>RIMA 유튜브 자동 업로드 시스템</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 20px;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+    h1 {
+      font-size: 24px;
+      margin-top: 40px;
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: bold;
+    }
+    input[type="text"], textarea, select {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    input[type="file"] {
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 18px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+    }
+    hr {
+      margin: 40px 0;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 16px;
+      }
+      h1 {
+        font-size: 20px;
+      }
+    }
+  </style>
 </head>
 <body>
 
 <h1>🔴 기록 모드: 사람이 유튜브 업로드 과정을 수행하세요</h1>
 
 <form id="uploadForm">
-  <label>제목: <input type="text" name="title"></label><br><br>
-  <label>설명: <textarea name="description"></textarea></label><br><br>
-  <label>썸네일: <input type="file" name="thumbnail"></label><br><br>
-  <label>영상 파일: <input type="file" name="video"></label><br><br>
-  <label>공개 여부:
-    <select name="privacy">
-      <option value="public">공개</option>
-      <option value="unlisted">일부공개</option>
-      <option value="private">비공개</option>
-    </select>
-  </label><br><br>
+  <label>제목:</label>
+  <input type="text" name="title">
+
+  <label>설명:</label>
+  <textarea name="description" rows="4"></textarea>
+
+  <label>썸네일:</label>
+  <input type="file" name="thumbnail">
+
+  <label>영상 파일:</label>
+  <input type="file" name="video">
+
+  <label>공개 여부:</label>
+  <select name="privacy">
+    <option value="public">공개</option>
+    <option value="unlisted">일부공개</option>
+    <option value="private">비공개</option>
+  </select>
+
   <button type="submit">기록 저장</button>
 </form>
 
@@ -28,14 +94,13 @@
 <h1>🟢 재생 모드: 기록된 내용을 불러와 자동 업로드합니다</h1>
 <p>upload_log.json 파일을 선택하면 내용을 확인할 수 있습니다.</p>
 <input type="file" id="logInput" accept=".json"><br><br>
-<pre id="logDisplay"></pre>
+<pre id="logDisplay">여기에 업로드 내용이 표시됩니다...</pre>
 
 <hr>
 <p>자막제공 by HIPHOPLE.com</p>
 <p>이 영상은 ChatGPT의 유료광고를 포함하고 있습니다.</p>
 
 <script>
-  // 기록 모드 저장
   document.getElementById('uploadForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const form = new FormData(e.target);
@@ -53,7 +118,6 @@
     link.click();
   });
 
-  // 재생 모드 불러오기
   document.getElementById('logInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     const reader = new FileReader();
