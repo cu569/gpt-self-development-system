@@ -2,103 +2,93 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>RIMA 유튜브 자동 업로드 시스템</title>
+  <title>RIMA 유튜브 자동 업로드</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 20px;
+      font-family: sans-serif;
+      padding: 20px;
       font-size: 18px;
       line-height: 1.6;
+      background-color: #f9f9f9;
     }
     h1 {
-      font-size: 24px;
-      margin-top: 40px;
+      font-size: 26px;
+      color: #222;
       margin-bottom: 10px;
     }
-    label {
-      display: block;
-      margin: 10px 0 5px;
-      font-weight: bold;
-    }
-    input[type="text"], textarea, select {
-      width: 100%;
+    button, input[type="file"], input[type="text"], textarea, select {
+      font-size: 18px;
       padding: 12px;
-      font-size: 16px;
+      width: 100%;
       margin-bottom: 20px;
       border-radius: 6px;
       border: 1px solid #ccc;
     }
-    input[type="file"] {
-      margin-bottom: 20px;
-    }
     button {
-      padding: 12px 24px;
-      font-size: 18px;
-      background-color: #007bff;
+      background-color: #e50914;
       color: white;
       border: none;
-      border-radius: 6px;
       cursor: pointer;
     }
     button:hover {
-      background-color: #0056b3;
+      background-color: #c40812;
+    }
+    .youtube-button {
+      background-color: #ff0000;
+      color: white;
+      font-weight: bold;
+    }
+    .youtube-button:hover {
+      background-color: #cc0000;
+    }
+    .section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
     }
     pre {
-      background: #f4f4f4;
+      background: #eee;
       padding: 15px;
       border-radius: 6px;
       overflow-x: auto;
-    }
-    hr {
-      margin: 40px 0;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 16px;
-      }
-      h1 {
-        font-size: 20px;
-      }
     }
   </style>
 </head>
 <body>
 
-<h1>🔴 기록 모드: 사람이 유튜브 업로드 과정을 수행하세요</h1>
+<div class="section">
+  <h1>📺 유튜브 스튜디오로 이동</h1>
+  <button class="youtube-button" onclick="window.open('https://studio.youtube.com/', '_blank')">
+    유튜브 스튜디오 열기
+  </button>
+</div>
 
-<form id="uploadForm">
-  <label>제목:</label>
-  <input type="text" name="title">
+<div class="section">
+  <h1>🔴 기록 모드 - 업로드 정보 입력</h1>
+  <form id="uploadForm">
+    <input type="text" name="title" placeholder="제목을 입력하세요">
+    <textarea name="description" rows="4" placeholder="설명을 입력하세요"></textarea>
+    <label>썸네일 선택:</label>
+    <input type="file" name="thumbnail">
+    <label>영상 파일 선택:</label>
+    <input type="file" name="video">
+    <label>공개 설정:</label>
+    <select name="privacy">
+      <option value="public">공개</option>
+      <option value="unlisted">일부공개</option>
+      <option value="private">비공개</option>
+    </select>
+    <button type="submit">기록 저장하기 (upload_log.json)</button>
+  </form>
+</div>
 
-  <label>설명:</label>
-  <textarea name="description" rows="4"></textarea>
-
-  <label>썸네일:</label>
-  <input type="file" name="thumbnail">
-
-  <label>영상 파일:</label>
-  <input type="file" name="video">
-
-  <label>공개 여부:</label>
-  <select name="privacy">
-    <option value="public">공개</option>
-    <option value="unlisted">일부공개</option>
-    <option value="private">비공개</option>
-  </select>
-
-  <button type="submit">기록 저장</button>
-</form>
-
-<hr>
-
-<h1>🟢 재생 모드: 기록된 내용을 불러와 자동 업로드합니다</h1>
-<p>upload_log.json 파일을 선택하면 내용을 확인할 수 있습니다.</p>
-<input type="file" id="logInput" accept=".json"><br><br>
-<pre id="logDisplay">여기에 업로드 내용이 표시됩니다...</pre>
-
-<hr>
-<p>자막제공 by HIPHOPLE.com</p>
-<p>이 영상은 ChatGPT의 유료광고를 포함하고 있습니다.</p>
+<div class="section">
+  <h1>🟢 재생 모드 - 기록된 내용 불러오기</h1>
+  <input type="file" id="logInput" accept=".json">
+  <pre id="logDisplay">여기에 기록된 업로드 내용이 표시됩니다.</pre>
+</div>
 
 <script>
   document.getElementById('uploadForm').addEventListener('submit', function(e) {
