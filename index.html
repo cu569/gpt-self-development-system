@@ -1,101 +1,119 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>🎬 유튜브 업로드 설정 파일 생성기</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎬 리마 유튜브 업로드 시뮬레이터</title>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f9f9f9;
-      padding: 30px;
-      max-width: 700px;
-      margin: auto;
+      font-family: "Arial", sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background-color: #f5f5f5;
     }
     h1 {
-      color: #333;
       text-align: center;
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     label {
-      display: block;
-      margin-top: 20px;
       font-weight: bold;
+      display: block;
+      margin-bottom: 0.25rem;
     }
-    input, textarea {
+    input[type="text"],
+    textarea {
       width: 100%;
-      padding: 10px;
-      margin-top: 5px;
+      padding: 0.5rem;
       border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 16px;
+      border-radius: 8px;
+      box-sizing: border-box;
+      margin-bottom: 1rem;
     }
     button {
-      margin-top: 25px;
       background-color: #007BFF;
       color: white;
-      padding: 15px;
       border: none;
-      border-radius: 5px;
-      font-size: 18px;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 8px;
       cursor: pointer;
+      width: 100%;
     }
-    pre {
-      background-color: #eee;
-      padding: 15px;
-      border-radius: 5px;
-      overflow: auto;
-      margin-top: 20px;
+    button:hover {
+      background-color: #0056b3;
+    }
+    .log {
+      background-color: #e9ecef;
+      padding: 1rem;
+      border-radius: 8px;
+      white-space: pre-wrap;
     }
   </style>
 </head>
 <body>
+  <h1>🎬 리마 유튜브 업로드 시뮬레이터</h1>
 
-  <h1>🎬 유튜브 업로드 설정 파일 생성기</h1>
+  <div class="card">
+    <label>📺 채널명 입력</label>
+    <input id="channel" type="text" placeholder="예: CSS AI Position"/>
+    
+    <label>📌 영상 제목</label>
+    <input id="title" type="text" placeholder="영상 제목 입력"/>
 
-  <label>📺 채널명 입력</label>
-  <input type="text" id="channel" placeholder="예: CSS AI Position">
+    <label>📋 설명 (description)</label>
+    <textarea id="description" rows="3" placeholder="영상 설명 입력"></textarea>
 
-  <label>📌 영상 제목</label>
-  <input type="text" id="title" placeholder="영상 제목 입력">
+    <label>🧠 리마에게 명령할 문장</label>
+    <input id="command" type="text" placeholder="예: 리마야 유튜브 업로드해줘"/>
+    
+    <button onclick="runSimulation()">📁 설정파일 생성 (upload.json)</button>
+  </div>
 
-  <label>📝 설명 (description)</label>
-  <textarea id="description" rows="4" placeholder="영상 설명 입력"></textarea>
-
-  <label>🧠 리마에게 명령할 문장</label>
-  <input type="text" id="command" placeholder="예: 리마야 유튜브 업로드해줘">
-
-  <button onclick="generateUploadJson()">📁 설정파일 생성 (upload.json)</button>
-
-  <pre id="result"></pre>
+  <div class="card">
+    <label>📜 실행 로그</label>
+    <div id="log" class="log">시뮬레이터 대기 중...</div>
+  </div>
 
   <script>
-    function generateUploadJson() {
-      const channel = document.getElementById("channel").value;
-      const title = document.getElementById("title").value;
-      const description = document.getElementById("description").value;
-      const command = document.getElementById("command").value;
+    function runSimulation() {
+      const channel = document.getElementById("channel").value.trim();
+      const title = document.getElementById("title").value.trim();
+      const desc = document.getElementById("description").value.trim();
+      const command = document.getElementById("command").value.trim();
+      const log = document.getElementById("log");
 
-      const uploadData = {
-        channel_name: channel,
-        title: title,
-        description: description,
-        command: command,
-        visibility: "공개",
-        thumbnail: "auto"
+      if (!channel || !title || !desc || !command) {
+        log.innerText = "❗ 모든 항목을 입력해주세요.";
+        return;
+      }
+
+      const data = {
+        채널명: channel,
+        제목: title,
+        설명: desc,
+        명령어: command,
+        썸네일: "🎯 썸네일 자동 생성 완료",
+        예약: "⏰ 예약 시간 분석 중...",
+        상태: "📢 유튜브 업로드 시뮬레이션 완료!"
       };
 
-      const jsonString = JSON.stringify(uploadData, null, 2);
-
-      const blob = new Blob([jsonString], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "upload.json";
-      a.click();
-
-      document.getElementById("result").textContent = jsonString;
+      log.innerText =
+        `✅ 채널: ${data.채널명}\n` +
+        `✅ 제목: ${data.제목}\n` +
+        `✅ 설명: ${data.설명}\n` +
+        `🧠 명령어: ${data.명령어}\n` +
+        `${data.예약}\n` +
+        `${data.썸네일}\n` +
+        `${data.상태}`;
     }
   </script>
-
 </body>
 </html>
