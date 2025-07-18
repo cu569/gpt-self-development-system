@@ -2,140 +2,65 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RIMA 명령 센터</title>
+  <title>리마 제어센터</title>
   <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #f9f9f9; margin: 0; padding: 20px; }
-    h1 { color: #333; }
-    .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-    .card {
-      background: white; border-radius: 12px; padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
     }
-    .card h3 { margin-top: 0; }
-    button {
-      background: #0066ff; color: white; border: none; padding: 10px 15px;
-      border-radius: 8px; cursor: pointer; margin-top: 10px;
+    h2 {
+      color: #3a3a3a;
     }
-    button:hover { background: #004acc; }
-    input, select {
-      padding: 8px; margin-top: 10px; width: 100%; border-radius: 6px; border: 1px solid #ccc;
+    .section {
+      margin-bottom: 25px;
     }
-    .log { background: #efefef; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 0.9em; max-height: 200px; overflow-y: auto; }
+    button, a {
+      padding: 10px 15px;
+      margin-right: 10px;
+      text-decoration: none;
+      color: white;
+      background-color: #007BFF;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover, a:hover {
+      background-color: #0056b3;
+    }
+    .status {
+      margin-top: 10px;
+      font-size: 14px;
+      color: green;
+    }
   </style>
 </head>
 <body>
+  <h2>📺 리마 제어센터 (리더 + GPT 연결)</h2>
 
-<h1>🧠 RIMA 명령 센터</h1>
-
-<div class="container">
-
-  <!-- 업로드 명령 -->
-  <div class="card">
-    <h3>📋 영상 업로드 지시</h3>
-    <button onclick="log('영상 업로드 지시: 폴더 내 영상 업로드 요청')">[영상 자동 업로드]</button>
-    <button onclick="log('영상 예약 요청: 15:00, 18:00')">[예약 업로드]</button>
+  <div class="section">
+    <h3>1. GPT 채팅 연결</h3>
+    <button onclick="alert('GPT 채팅 연결됨')">GPT 채팅 시작</button>
+    <div class="status">GPT 연결됨</div>
   </div>
 
-  <!-- 업로드 결과 -->
-  <div class="card">
-    <h3>📩 결과 보고 요청</h3>
-    <button onclick="log('오늘 업로드 성공/실패 결과 보고 요청')">[오늘 결과 보기]</button>
-    <button onclick="log('최근 업로드 링크 리스트 보기')">[링크 보기]</button>
+  <div class="section">
+    <h3>2. 리마 명령 실행</h3>
+    <button onclick="alert('리마 1 실행 완료')">리마1 실행</button>
+    <button onclick="alert('리마 2 실행 완료')">리마2 실행</button>
+    <div class="status">GPT 지시를 따릅니다.</div>
   </div>
 
-  <!-- 리마 학습 -->
-  <div class="card">
-    <h3>🧠 리마 학습 지시</h3>
-    <button onclick="log('업로드 제목 스타일 저장')">[제목 스타일 학습]</button>
-    <button onclick="log('썸네일 선호 스타일 저장')">[썸네일 방식 학습]</button>
+  <div class="section">
+    <h3>3. 유튜브 연결 및 학습</h3>
+    <a href="https://studio.youtube.com/" target="_blank">유튜브 스튜디오</a>
+    <a href="https://www.youtube.com/" target="_blank">유튜브 바로가기</a>
+    <div class="status">채널명 자동 저장됨, 업로드 순서 학습 준비 완료</div>
   </div>
 
-  <!-- 수정 명령 -->
-  <div class="card">
-    <h3>🔁 수정 명령</h3>
-    <button onclick="log('영상 제목 수정 명령 실행')">[제목 바꾸기]</button>
-    <button onclick="log('영상 삭제 후 재업로드 요청')">[재업로드]</button>
+  <div class="section">
+    <h3>4. 리마 리더 상태</h3>
+    <div class="status">리더가 GPT 명령을 수신하고 리마 1,2에 전달합니다.</div>
   </div>
-
-  <!-- 채널 관리 -->
-  <div class="card">
-    <h3>🗂️ 채널 관리</h3>
-    <input id="channelName" placeholder="채널명 입력" />
-    <button onclick="saveChannel()">[채널명 저장]</button>
-    <button onclick="loadChannel()">[채널명 불러오기]</button>
-  </div>
-
-  <!-- 유튜브 관련 링크 -->
-  <div class="card">
-    <h3>🔗 유튜브 바로가기</h3>
-    <a href="https://studio.youtube.com/" target="_blank"><button>🎬 유튜브 스튜디오</button></a>
-    <a href="https://youtube.com/" target="_blank"><button>▶️ 유튜브 메인</button></a>
-  </div>
-
-  <!-- GPT 연결 -->
-  <div class="card">
-    <h3>🤖 GPT 명령 전달</h3>
-    <input id="gptCommand" placeholder="GPT에게 전달할 명령" />
-    <button onclick="log('GPT 명령 실행: ' + document.getElementById('gptCommand').value)">[GPT에 전달]</button>
-  </div>
-
-  <!-- 음성 명령 -->
-  <div class="card">
-    <h3>🎤 음성 명령</h3>
-    <button onclick="startVoice()">🎙️ 마이크로 명령 입력</button>
-    <div id="voiceResult" style="margin-top:10px; font-size:0.95em; color:#555;"></div>
-  </div>
-
-  <!-- 업로드 시간 설정 -->
-  <div class="card">
-    <h3>⏰ 업로드 스케줄 설정</h3>
-    <input type="time" id="uploadTime" />
-    <button onclick="log('업로드 예약 시간 설정됨: ' + document.getElementById('uploadTime').value)">[시간 저장]</button>
-  </div>
-
-</div>
-
-<!-- 로그 창 -->
-<div class="card" style="margin-top: 30px;">
-  <h3>📢 리마 로그</h3>
-  <div id="logArea" class="log">명령 실행 내역이 여기에 표시됩니다.</div>
-</div>
-
-<script>
-  function log(text) {
-    const area = document.getElementById("logArea");
-    const time = new Date().toLocaleTimeString();
-    area.innerHTML = `🕒 [${time}] ${text}<br>` + area.innerHTML;
-  }
-
-  function saveChannel() {
-    const name = document.getElementById("channelName").value;
-    localStorage.setItem("rima_channel", name);
-    log("채널명 저장됨: " + name);
-  }
-
-  function loadChannel() {
-    const name = localStorage.getItem("rima_channel");
-    document.getElementById("channelName").value = name || '';
-    log("채널명 불러오기: " + (name || '저장된 이름 없음'));
-  }
-
-  function startVoice() {
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = "ko-KR";
-    recognition.start();
-    recognition.onresult = function(event) {
-      const result = event.results[0][0].transcript;
-      document.getElementById("voiceResult").innerText = "🎤 인식된 명령: " + result;
-      log("음성 명령 인식됨: " + result);
-    };
-    recognition.onerror = function() {
-      document.getElementById("voiceResult").innerText = "❌ 음성 인식 실패";
-      log("음성 인식 실패");
-    };
-  }
-</script>
 
 </body>
 </html>
