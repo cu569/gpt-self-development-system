@@ -1,41 +1,69 @@
-const chatbox = document.getElementById("chatbox");
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>업로드 리마 실행기</title>
+  <style>
+    body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
+    .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h1 { text-align: center; margin-bottom: 1rem; }
+    .controls { display: flex; flex-direction: column; gap: 10px; }
+    input[type="file"] { font-size: 1rem; }
+    button { padding: 10px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .chatbox { margin-top: 20px; height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background: #fafafa; }
+    .msg { margin-bottom: 8px; }
+    .bold { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎬 업로드 리마 실행기</h1>
 
-function appendMessage(sender, message) {
-  const line = document.createElement("div");
-  line.innerHTML = `<strong>${sender}:</strong> ${message}`;
-  chatbox.appendChild(line);
-  chatbox.scrollTop = chatbox.scrollHeight;
-}
+    <div class="controls">
+      <label>📁 영상 파일 선택:</label>
+      <input type="file" id="videoFile" accept="video/*" />
 
-function sendMessage() {
-  const input = document.getElementById("messageInput");
-  const msg = input.value.trim();
-  if (!msg) return;
+      <button onclick="runRima1()">🤖 리마1 따라하기 (업로드 시뮬레이션)</button>
+      <button onclick="runRima2()">🧠 리마2 스스로 실행 (반복)</button>
+    </div>
 
-  appendMessage("사용자", msg);
-  input.value = "";
+    <div class="chatbox" id="chatLog">
+      <div class="msg"><span class="bold">시스템:</span> 파일을 선택하고 리마1 버튼을 눌러 업로드를 시작하세요.</div>
+    </div>
+  </div>
 
-  if (msg.includes("스스로") || msg.includes("예약")) {
-    appendMessage("GPT", "→ 리마2에게 자동 실행 지시");
-    rima2Action();
-  } else if (msg.includes("따라") || msg.includes("지시")) {
-    appendMessage("GPT", "→ 리마1에게 따라하기 명령");
-    rima1Action();
-  } else {
-    appendMessage("GPT", "지시 내용을 분석 중입니다.");
-  }
-}
+  <script>
+    const chatLog = document.getElementById('chatLog');
 
-function rima1Action() {
-  appendMessage("리마1", "지시에 따라 영상 업로드 절차 시작...");
-  setTimeout(() => {
-    appendMessage("리마1", "업로드 완료 (따라 실행 성공)");
-  }, 2000);
-}
+    function append(msg) {
+      const div = document.createElement('div');
+      div.className = 'msg';
+      div.innerHTML = msg;
+      chatLog.appendChild(div);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
 
-function rima2Action() {
-  appendMessage("리마2", "자율 학습 기반으로 영상 예약 업로드 실행...");
-  setTimeout(() => {
-    appendMessage("리마2", "자율 실행 완료 (예약 업로드 성공)");
-  }, 2000);
-}
+    function runRima1() {
+      const fileInput = document.getElementById('videoFile');
+      if (!fileInput.files.length) {
+        append('<span class="bold">리마1:</span> 먼저 업로드할 영상을 선택해주세요.');
+        return;
+      }
+      const fileName = fileInput.files[0].name;
+      append(`<span class="bold">리마1:</span> 영상 파일 선택됨 → <code>${fileName}</code>`);
+      append('<span class="bold">리마1:</span> 업로드 중...');
+      setTimeout(() => {
+        append('<span class="bold">리마1:</span> ✅ 업로드 완료!');
+      }, 2000);
+    }
+
+    function runRima2() {
+      append('<span class="bold">리마2:</span> 스스로 실행 준비 완료. 반복 업로드 시뮬레이션 시작...');
+      setTimeout(() => {
+        append('<span class="bold">리마2:</span> ✅ 리마2 자동 실행 완료!');
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
