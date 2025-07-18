@@ -1,52 +1,46 @@
 const puppeteer = require("puppeteer");
-const fs = require("fs");
 const path = require("path");
 
 (async () => {
-  const uploadData = JSON.parse(fs.readFileSync("upload_log.json", "utf-8"));
+  const upload = {
+    title: "포지션 뒤돌리기 완전 정복",
+    description: "이 영상 하나로 포지션 뒤돌리기 마스터하세요.",
+    videoPath: "C:/Users/사용자이름/Desktop/video.mp4",
+    thumbnailPath: "C:/Users/사용자이름/Desktop/thumb.jpg",
+    scheduleDate: "2025-07-18",   // 예약 날짜
+    scheduleTime: "15:00"         // 예약 시간 (24시간제)
+  };
 
   const browser = await puppeteer.launch({
     headless: false,
     defaultViewport: null,
-    args: ["--start-maximized"],
+    args: ["--start-maximized"]
   });
 
   const page = await browser.newPage();
-
-  // 1. 유튜브 스튜디오 업로드 페이지로 이동
   await page.goto("https://studio.youtube.com");
 
-  // 2. 로그인된 상태 유지 필요
-  // (이미 로그인된 세션 쿠키를 사용하는 방식 권장)
+  console.log("🔐 로그인 후 업로드 창이 열리면 자동 실행됩니다...");
+  await page.waitForSelector("input[type='file']", { timeout: 0 });
 
-  // 3. 업로드 버튼 클릭 (직접 셀렉터 사용 또는 우회 방식 필요)
-  // 아래는 예시 셀렉터입니다 (수시로 바뀔 수 있으므로 점검 필요)
-
-  // 4. 영상 업로드
   const fileInput = await page.$("input[type='file']");
-  await fileInput.uploadFile(path.resolve(uploadData.videoPath));
+  await fileInput.uploadFile(path.resolve(upload.videoPath));
 
-  // 5. 제목 입력
   await page.waitForSelector("textarea#title-textarea");
-  await page.type("textarea#title-textarea", uploadData.title);
+  await page.type("textarea#title-textarea", upload.title);
+  await page.type("textarea#description-textarea", upload.description);
 
-  // 6. 설명 입력
-  await page.type("textarea#description-textarea", uploadData.description);
-
-  // 7. 썸네일 업로드
   const thumbInput = await page.$("input[type='file'][accept='image/*']");
-  await thumbInput.uploadFile(path.resolve(uploadData.thumbnailPath));
+  await thumbInput.uploadFile(path.resolve(upload.thumbnailPath));
 
-  // 8. 예약 설정 클릭
-  await page.click("ytcp-button[aria-label='공개 옵션']"); // 공개 설정 열기
-  await page.click("tp-yt-paper-item[title='예약']"); // 예약 선택
+  await page.click("ytcp-button[aria-label='공개 옵션']");
+  await page.waitForTimeout(500);
+  await page.click("tp-yt-paper-item[title='예약']");
+  await page.waitForTimeout(500);
 
-  // 9. 날짜/시간 설정
-  await page.type("input[aria-label='날짜 입력']", uploadData.scheduleDate); // 예: "2025-07-18"
-  await page.type("input[aria-label='시간 입력']", uploadData.scheduleTime); // 예: "16:00"
+  await page.type("input[aria-label='날짜 입력']", upload.scheduleDate);
+  await page.type("input[aria-label='시간 입력']", upload.scheduleTime);
 
-  // 10. '완료' 클릭
   await page.click("ytcp-button[id='done-button']");
-
   console.log("✅ 예약 업로드 완료!");
 })();
