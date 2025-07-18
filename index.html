@@ -1,89 +1,61 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>리마 자동 영상 업로드</title>
+  <meta charset="UTF-8">
+  <title>🎬 리마 자동 유튜브 업로드</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      padding: 30px;
-    }
-    .container {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
-      max-width: 600px;
-      margin: auto;
-    }
-    h2 {
-      color: #333;
-    }
-    label {
-      display: block;
-      margin-top: 20px;
-      font-weight: bold;
-    }
-    input[type="text"],
-    textarea {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+    body { font-family: Arial, sans-serif; text-align: center; padding: 30px; background: #f9f9f9; }
+    h1 { font-size: 28px; margin-bottom: 10px; }
+    textarea, input[type="text"], input[type="file"] {
+      width: 90%; max-width: 500px; margin: 10px auto; padding: 10px;
+      border: 1px solid #ccc; border-radius: 5px;
     }
     button {
-      margin-top: 25px;
-      padding: 12px 20px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+      padding: 12px 30px;
+      background-color: #007bff; color: white;
+      border: none; border-radius: 5px;
       font-size: 16px;
     }
-    button:hover {
-      background: #0056b3;
-    }
-    .status {
-      margin-top: 25px;
-      font-weight: bold;
-      color: green;
-    }
+    .log { margin-top: 20px; color: green; font-weight: bold; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>🎬 리마 자동 영상 업로드</h2>
-
-    <label for="title">제목 (자동 입력됨)</label>
-    <input type="text" id="title" readonly value="포지션 AI 자동 업로드 영상">
-
-    <label for="desc">설명 (자동 입력됨)</label>
-    <textarea id="desc" rows="4" readonly>이 영상은 CSS 포지션 시뮬레이터 시스템에서 자동 생성되었습니다.</textarea>
-
-    <label for="file">업로드할 영상 파일</label>
-    <input type="file" id="file" accept="video/mp4" />
-
-    <button onclick="upload()">🚀 자동 업로드 시작</button>
-
-    <div class="status" id="status">업로드 준비 완료</div>
-  </div>
+  <h1>🎬 리마 자동 유튜브 업로드</h1>
+  <input type="file" id="videoFile" accept="video/*"><br>
+  <input type="text" id="title" placeholder="제목 (자동 입력됨)" readonly><br>
+  <textarea id="description" rows="4" placeholder="설명 (자동 입력됨)" readonly></textarea><br>
+  <button onclick="startUpload()">🚀 자동 업로드 시작</button>
+  <div class="log" id="log">업로드 준비 중...</div>
 
   <script>
-    function upload() {
-      const file = document.getElementById('file').files[0];
-      const status = document.getElementById('status');
-      if (!file) {
-        status.style.color = 'red';
-        status.innerText = "❌ 업로드할 영상 파일을 선택하세요.";
+    const videoInput = document.getElementById('videoFile');
+    const titleInput = document.getElementById('title');
+    const descInput = document.getElementById('description');
+    const log = document.getElementById('log');
+
+    videoInput.addEventListener('change', () => {
+      const file = videoInput.files[0];
+      if (file) {
+        const baseName = file.name.replace(/\.[^/.]+$/, "");
+        titleInput.value = baseName + " | 리마 자동 업로드";
+        descInput.value = `이 영상은 CSS 포지션 시뮬레이터 시스템에서 자동 생성되어 리마 GPT 업로드 시스템을 통해 업로드되었습니다.`;
+        log.textContent = "✅ 업로드 준비 완료";
+      }
+    });
+
+    function startUpload() {
+      if (!videoInput.files.length) {
+        log.textContent = "❌ 영상 파일을 선택해주세요.";
         return;
       }
 
-      status.innerText = "📡 업로드 중...";
+      // 여기에 리마 GPT와의 연동/명령 전송 (리더 GPT 지시)
+      console.log("🔗 리마 GPT 리더에게 명령 전송 중...");
+      
+      log.textContent = "🚀 업로드 실행 중... (데모 상태)";
       setTimeout(() => {
-        status.innerText = `✅ '${file.name}' 자동 업로드 완료 (시뮬레이션)!`;
+        log.textContent = "✅ 유튜브 업로드 완료됨 (시뮬레이션)";
+        alert("업로드 완료! 🎉");
       }, 2000);
     }
   </script>
