@@ -1,37 +1,69 @@
-const puppeteer = require("puppeteer");
-const path = require("path");
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RIMA 자동 영상 업로드</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f8f9fa;
+      padding: 40px;
+    }
+    h1 {
+      color: #343a40;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px;
+    }
+    #log {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      height: 200px;
+      overflow-y: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>🎥 RIMA 유튜브 업로드 자동화</h1>
+  <input type="file" id="videoFile" accept="video/*" />
+  <br />
+  <input type="text" id="title" placeholder="제목" />
+  <input type="text" id="description" placeholder="설명" />
+  <br />
+  <button onclick="upload()">업로드 시작</button>
 
-(async () => {
-  const upload = {
-    title: "포지션 뒤돌리기 완전 정복",
-    description: "이 영상 하나로 포지션 뒤돌리기 마스터하세요.",
-    videoPath: "C:/Users/사용자이름/Desktop/video.mp4",
-    thumbnailPath: "C:/Users/사용자이름/Desktop/thumb.jpg",
-    scheduleDate: "2025-07-18",
-    scheduleTime: "15:00"
-  };
+  <div id="log">✅ 로그 영역</div>
 
-  const browser = await puppeteer.launch({
-    headless: false,
-    defaultViewport: null,
-    args: ["--start-maximized"]
-  });
+  <script>
+    function log(message) {
+      const logArea = document.getElementById('log');
+      logArea.innerHTML += "<br/>" + message;
+      logArea.scrollTop = logArea.scrollHeight;
+    }
 
-  const page = await browser.newPage();
-  await page.goto("https://studio.youtube.com");
+    async function upload() {
+      const file = document.getElementById('videoFile').files[0];
+      const title = document.getElementById('title').value;
+      const description = document.getElementById('description').value;
 
-  console.log("🔒 로그인 후 업로드 창이 열리면 자동 실행됩니다...");
+      if (!file || !title) {
+        log("⚠️ 영상과 제목을 입력하세요.");
+        return;
+      }
 
-  await page.waitForSelector("input[type='file']", { timeout: 0 });
-  const fileInput = await page.$("input[type='file']");
-  await fileInput.uploadFile(path.resolve(upload.videoPath));
+      log("📤 영상 업로드 준비 중...");
 
-  await page.waitForSelector("textarea#title-textarea");
-  await page.type("textarea#title-textarea", upload.title);
-  await page.type("textarea#description-textarea", upload.description);
-
-  const thumbInput = await page.$("input[type='file'][accept='image/*']");
-  await thumbInput.uploadFile(path.resolve(upload.thumbnailPath));
-
-  // 이후 tab → tab → tab → 다음 → 예약설정 구현
-})();
+      // 실제 업로드 로직은 RIMA 자동화 봇 연동 또는 브라우저 자동 매크로로 대체합니다.
+      setTimeout(() => {
+        log(`✅ "${title}" 제목으로 영상 업로드 성공 (시뮬레이션).`);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
