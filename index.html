@@ -2,78 +2,97 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>님하우스 시작 시스템</title>
+  <title>니마 유튜브 업로드 도우미</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    .section { margin-bottom: 25px; }
-    button, a {
-      background-color: #007BFF;
-      color: white;
-      padding: 10px 15px;
-      margin-right: 10px;
+    body {
+      font-family: sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    .box {
+      background: white;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    button {
+      padding: 10px 20px;
+      margin-top: 10px;
       border: none;
       border-radius: 5px;
-      text-decoration: none;
+      background-color: #3498db;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
     }
-    button:hover, a:hover {
-      background-color: #0056b3;
+    .ready { background-color: #27ae60; }
+    .not-ready { background-color: #e74c3c; }
+    .status {
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: bold;
     }
-    .chatbox {
-      border: 1px solid #ccc;
-      padding: 10px;
-      height: 180px;
-      overflow-y: scroll;
-      background: #f9f9f9;
+    .link {
+      display: block;
       margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
-  <h2>🤖 님하우스 GPT & 니마 자동 실행 시스템</h2>
+  <h1>📺 니마 유튜브 자동화 시작</h1>
 
-  <div class="section">
-    <h3>📺 유튜브 링크</h3>
-    <a href="https://studio.youtube.com/" target="_blank">유튜브 스튜디오</a>
-    <a href="https://www.youtube.com/" target="_blank">유튜브 메인</a>
+  <div class="box">
+    <h2>🧑 사용자 (나)</h2>
+    <button onclick="setReady('user')">1. 시작 버튼</button>
+    <div class="status" id="user-status">❌ 준비되지 않음</div>
   </div>
 
-  <div class="section">
-    <h3>🧠 GPT 채팅창</h3>
-    <div class="chatbox" id="chatlog">
-      <div>GPT 대기 중...</div>
-    </div>
-    <input type="text" id="chatInput" placeholder="예: 님하우스 시작!" style="width:70%">
-    <button onclick="sendChat()">보내기</button>
+  <div class="box">
+    <h2>🤖 니마1 (따라하는 리마)</h2>
+    <button onclick="setReady('nima1')">2. 따라할 준비 완료</button>
+    <div class="status" id="nima1-status">❌ 준비되지 않음</div>
+  </div>
+
+  <div class="box">
+    <h2>🤖 니마2 (스스로 실행하는 리마)</h2>
+    <button onclick="setReady('nima2')">3. 자동 실행 준비 완료</button>
+    <div class="status" id="nima2-status">❌ 준비되지 않음</div>
+  </div>
+
+  <div class="box">
+    <h2>💬 GPT 판단 결과</h2>
+    <div id="gpt-message">⚠️ 모든 준비가 되면 자동 실행됩니다.</div>
+  </div>
+
+  <div class="box">
+    <h2>🔗 유튜브 바로가기</h2>
+    <a class="link" href="https://www.youtube.com" target="_blank">▶ 유튜브 메인</a>
+    <a class="link" href="https://studio.youtube.com" target="_blank">▶ 유튜브 스튜디오</a>
   </div>
 
   <script>
-    function logAction(msg) {
-      const log = document.getElementById('chatlog');
-      log.innerHTML += `<div>${msg}</div>`;
-      log.scrollTop = log.scrollHeight;
+    const status = {
+      user: false,
+      nima1: false,
+      nima2: false,
+    };
+
+    function setReady(who) {
+      status[who] = true;
+      document.getElementById(`${who}-status`).innerText = "✅ 준비 완료";
+      document.getElementById(`${who}-status`).className = "status ready";
+      checkAllReady();
     }
 
-    function sendChat() {
-      const input = document.getElementById('chatInput');
-      const log = document.getElementById('chatlog');
-      const message = input.value.trim();
-      if (message) {
-        log.innerHTML += `<div>🧑‍💻 사용자: ${message}</div>`;
-        input.value = '';
-
-        // 명령 감지
-        if (message === "님하우스 시작!") {
-          log.innerHTML += `<div>🤖 GPT: 명령 인식 → 니마에게 전달 중...</div>`;
-          setTimeout(() => {
-            log.innerHTML += `<div>🧠 니마: 사용자 행동 감지 완료 → 학습 및 실행 중 ✅</div>`;
-            log.scrollTop = log.scrollHeight;
-          }, 1000);
-        } else {
-          log.innerHTML += `<div>🤖 GPT: '${message}'에 대한 응답을 준비 중...</div>`;
-        }
-
-        log.scrollTop = log.scrollHeight;
+    function checkAllReady() {
+      const allReady = status.user && status.nima1 && status.nima2;
+      if (allReady) {
+        document.getElementById("gpt-message").innerText = "🎉 모든 준비 완료! 실행 시작하세요!";
       }
     }
   </script>
