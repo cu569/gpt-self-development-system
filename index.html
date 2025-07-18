@@ -7,8 +7,8 @@ const path = require("path");
     description: "이 영상 하나로 포지션 뒤돌리기 마스터하세요.",
     videoPath: "C:/Users/사용자이름/Desktop/video.mp4",
     thumbnailPath: "C:/Users/사용자이름/Desktop/thumb.jpg",
-    scheduleDate: "2025-07-18", // 예약 날짜 (YYYY-MM-DD)
-    scheduleTime: "15:00"       // 예약 시간 (24시간제, HH:mm)
+    scheduleDate: "2025-07-18",
+    scheduleTime: "15:00"
   };
 
   const browser = await puppeteer.launch({
@@ -20,9 +20,9 @@ const path = require("path");
   const page = await browser.newPage();
   await page.goto("https://studio.youtube.com");
 
-  console.log("🔐 로그인 후 업로드 창이 열리면 자동 실행됩니다...");
-  await page.waitForSelector("input[type='file']", { timeout: 0 });
+  console.log("🔒 로그인 후 업로드 창이 열리면 자동 실행됩니다...");
 
+  await page.waitForSelector("input[type='file']", { timeout: 0 });
   const fileInput = await page.$("input[type='file']");
   await fileInput.uploadFile(path.resolve(upload.videoPath));
 
@@ -33,18 +33,5 @@ const path = require("path");
   const thumbInput = await page.$("input[type='file'][accept='image/*']");
   await thumbInput.uploadFile(path.resolve(upload.thumbnailPath));
 
-  await page.click("ytcp-button[aria-label='공개 옵션']");
-
-  await page.waitForTimeout(1000);
-  await page.click("tp-yt-paper-radio-button[name='SCHEDULE']");
-
-  await page.waitForSelector("input[aria-label='날짜 입력']");
-  await page.type("input[aria-label='날짜 입력']", upload.scheduleDate);
-  await page.type("input[aria-label='시간 입력']", upload.scheduleTime);
-
-  await page.click("ytcp-button[id='done-button']");
-
-  console.log("✅ 예약 업로드 완료!");
-  await page.waitForTimeout(5000);
-  await browser.close();
+  // 이후 tab → tab → tab → 다음 → 예약설정 구현
 })();
