@@ -2,100 +2,81 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>니마 리마 유튜브 실행기</title>
+  <title>리마 & GPT 채팅 통합</title>
   <style>
-    body {
-      font-family: sans-serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 2rem;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem;
-    }
-    .box {
-      background-color: #fff;
-      padding: 1.2rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-    button {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 6px;
-      font-size: 1rem;
-      cursor: pointer;
-      margin-top: 0.5rem;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    .chat-box {
-      background: #222;
-      color: #0f0;
-      padding: 1rem;
-      border-radius: 6px;
-      height: 200px;
-      overflow-y: auto;
-      font-family: monospace;
-      font-size: 0.9rem;
-      margin-top: 1.5rem;
-    }
+    body { font-family: sans-serif; background: #f0f0f0; margin: 0; padding: 0; }
+    .container { max-width: 900px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .header { margin-bottom: 20px; }
+    .header a { margin-right: 10px; text-decoration: none; color: #0077cc; }
+    .chat-box { height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background: #fafafa; border-radius: 8px; }
+    .chat-message { margin-bottom: 10px; }
+    .chat-message span { font-weight: bold; }
+    .user { color: #333; }
+    .gpt { color: green; }
+    .rima1 { color: blue; }
+    .rima2 { color: purple; }
+    .input-row { margin-top: 15px; display: flex; gap: 10px; }
+    input[type="text"] { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #aaa; }
+    button { padding: 8px 14px; border: none; border-radius: 6px; background: #0077cc; color: white; cursor: pointer; }
+    button:hover { background: #005fa3; }
   </style>
 </head>
 <body>
-  <h1>니마 & 리마 유튜브 실행기</h1>
-
-  <div class="grid">
-    <div class="box">
-      <h3>나 (시작)</h3>
-      <button onclick="log('🙋‍♂️ 나: 유튜브 업로드 시작')">시작</button>
+  <div class="container">
+    <div class="header">
+      <strong>채널명:</strong> 포지션 TV |
+      <a href="https://www.youtube.com/" target="_blank">유튜브</a>
+      <a href="https://studio.youtube.com/" target="_blank">유튜브 스튜디오</a>
     </div>
 
-    <div class="box">
-      <h3>🤖 리마1 (따라하기)</h3>
-      <button onclick="log('🤖 리마1: 니마가 한 그대로 따라합니다')">따라하기</button>
+    <div class="chat-box" id="chatBox">
+      <!-- 채팅 내용 표시 -->
     </div>
 
-    <div class="box">
-      <h3>🧠 리마2 (스스로하기)</h3>
-      <button onclick="log('🧠 리마2: 학습 완료! 자동 실행 중')">스스로 하기</button>
+    <div class="input-row">
+      <input type="text" id="chatInput" placeholder="메시지를 입력하세요 (GPT 또는 리마 지시)" />
+      <button onclick="sendUserMessage()">보내기</button>
     </div>
 
-    <div class="box">
-      <h3>유튜브 스튜디오</h3>
-      <a href="https://studio.youtube.com" target="_blank">
-        <button>스튜디오 열기</button>
-      </a>
+    <div class="input-row" style="margin-top: 10px;">
+      <button onclick="runRima1()">리마1 따라하기</button>
+      <button onclick="runRima2()">리마2 스스로 실행</button>
     </div>
-
-    <div class="box">
-      <h3>유튜브 채널 바로가기</h3>
-      <a href="https://www.youtube.com" target="_blank">
-        <button>유튜브 열기</button>
-      </a>
-    </div>
-  </div>
-
-  <div class="chat-box" id="chatLog">
-    <strong>💬 채팅창:</strong><br>
   </div>
 
   <script>
-    function log(text) {
-      const box = document.getElementById("chatLog");
-      box.innerHTML += text + "<br>";
-      box.scrollTop = box.scrollHeight;
+    const chatBox = document.getElementById("chatBox");
+
+    function appendMessage(sender, text, className) {
+      const div = document.createElement("div");
+      div.className = `chat-message ${className}`;
+      div.innerHTML = `<span>[${sender}]</span> ${text}`;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendUserMessage() {
+      const input = document.getElementById("chatInput");
+      const msg = input.value.trim();
+      if (msg === "") return;
+      appendMessage("나", msg, "user");
+      input.value = "";
+      simulateGPT(msg);
+    }
+
+    function simulateGPT(msg) {
+      // 모의 GPT 응답 (실제 연결 가능)
+      setTimeout(() => {
+        appendMessage("GPT", `"${msg}"에 대한 답변입니다. 리마에게 지시를 보낼까요?`, "gpt");
+      }, 800);
+    }
+
+    function runRima1() {
+      appendMessage("리마1", "사용자 동작을 따라합니다. 채널 접근 → 영상 업로드 클릭!", "rima1");
+    }
+
+    function runRima2() {
+      appendMessage("리마2", "스스로 학습된 단계 실행 중... GPT 지시에 따라 분석 중입니다.", "rima2");
     }
   </script>
 </body>
