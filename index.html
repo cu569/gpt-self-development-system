@@ -2,65 +2,81 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>리마 제어센터</title>
+  <title>님하우스 시작 시스템</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 30px;
-    }
-    h2 {
-      color: #3a3a3a;
-    }
-    .section {
-      margin-bottom: 25px;
-    }
+    body { font-family: sans-serif; padding: 20px; }
+    .section { margin-bottom: 25px; }
     button, a {
+      background-color: #007BFF;
+      color: white;
       padding: 10px 15px;
       margin-right: 10px;
-      text-decoration: none;
-      color: white;
-      background-color: #007BFF;
       border: none;
       border-radius: 5px;
-      cursor: pointer;
+      text-decoration: none;
     }
     button:hover, a:hover {
       background-color: #0056b3;
     }
-    .status {
+    .chatbox {
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 180px;
+      overflow-y: scroll;
+      background: #f9f9f9;
       margin-top: 10px;
-      font-size: 14px;
-      color: green;
     }
   </style>
 </head>
 <body>
-  <h2>📺 리마 제어센터 (리더 + GPT 연결)</h2>
+
+  <h2>🤖 님하우스 GPT & 니마 자동 실행 시스템</h2>
 
   <div class="section">
-    <h3>1. GPT 채팅 연결</h3>
-    <button onclick="alert('GPT 채팅 연결됨')">GPT 채팅 시작</button>
-    <div class="status">GPT 연결됨</div>
-  </div>
-
-  <div class="section">
-    <h3>2. 리마 명령 실행</h3>
-    <button onclick="alert('리마 1 실행 완료')">리마1 실행</button>
-    <button onclick="alert('리마 2 실행 완료')">리마2 실행</button>
-    <div class="status">GPT 지시를 따릅니다.</div>
-  </div>
-
-  <div class="section">
-    <h3>3. 유튜브 연결 및 학습</h3>
+    <h3>📺 유튜브 링크</h3>
     <a href="https://studio.youtube.com/" target="_blank">유튜브 스튜디오</a>
-    <a href="https://www.youtube.com/" target="_blank">유튜브 바로가기</a>
-    <div class="status">채널명 자동 저장됨, 업로드 순서 학습 준비 완료</div>
+    <a href="https://www.youtube.com/" target="_blank">유튜브 메인</a>
   </div>
 
   <div class="section">
-    <h3>4. 리마 리더 상태</h3>
-    <div class="status">리더가 GPT 명령을 수신하고 리마 1,2에 전달합니다.</div>
+    <h3>🧠 GPT 채팅창</h3>
+    <div class="chatbox" id="chatlog">
+      <div>GPT 대기 중...</div>
+    </div>
+    <input type="text" id="chatInput" placeholder="예: 님하우스 시작!" style="width:70%">
+    <button onclick="sendChat()">보내기</button>
   </div>
+
+  <script>
+    function logAction(msg) {
+      const log = document.getElementById('chatlog');
+      log.innerHTML += `<div>${msg}</div>`;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function sendChat() {
+      const input = document.getElementById('chatInput');
+      const log = document.getElementById('chatlog');
+      const message = input.value.trim();
+      if (message) {
+        log.innerHTML += `<div>🧑‍💻 사용자: ${message}</div>`;
+        input.value = '';
+
+        // 명령 감지
+        if (message === "님하우스 시작!") {
+          log.innerHTML += `<div>🤖 GPT: 명령 인식 → 니마에게 전달 중...</div>`;
+          setTimeout(() => {
+            log.innerHTML += `<div>🧠 니마: 사용자 행동 감지 완료 → 학습 및 실행 중 ✅</div>`;
+            log.scrollTop = log.scrollHeight;
+          }, 1000);
+        } else {
+          log.innerHTML += `<div>🤖 GPT: '${message}'에 대한 응답을 준비 중...</div>`;
+        }
+
+        log.scrollTop = log.scrollHeight;
+      }
+    }
+  </script>
 
 </body>
 </html>
