@@ -3,117 +3,139 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🎬 리마 유튜브 업로드 시뮬레이터</title>
+  <title>RIMA 명령 센터</title>
   <style>
-    body {
-      font-family: "Arial", sans-serif;
-      margin: 0;
-      padding: 2rem;
-      background-color: #f5f5f5;
-    }
-    h1 {
-      text-align: center;
-      font-size: 1.5rem;
-      margin-bottom: 2rem;
-    }
+    body { font-family: 'Segoe UI', sans-serif; background: #f9f9f9; margin: 0; padding: 20px; }
+    h1 { color: #333; }
+    .container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
     .card {
-      background: white;
-      border-radius: 12px;
-      padding: 1rem;
-      margin-bottom: 1.5rem;
+      background: white; border-radius: 12px; padding: 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 0.25rem;
-    }
-    input[type="text"],
-    textarea {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      box-sizing: border-box;
-      margin-bottom: 1rem;
-    }
+    .card h3 { margin-top: 0; }
     button {
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      width: 100%;
+      background: #0066ff; color: white; border: none; padding: 10px 15px;
+      border-radius: 8px; cursor: pointer; margin-top: 10px;
     }
-    button:hover {
-      background-color: #0056b3;
+    button:hover { background: #004acc; }
+    input, select {
+      padding: 8px; margin-top: 10px; width: 100%; border-radius: 6px; border: 1px solid #ccc;
     }
-    .log {
-      background-color: #e9ecef;
-      padding: 1rem;
-      border-radius: 8px;
-      white-space: pre-wrap;
-    }
+    .log { background: #efefef; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 0.9em; max-height: 200px; overflow-y: auto; }
   </style>
 </head>
 <body>
-  <h1>🎬 리마 유튜브 업로드 시뮬레이터</h1>
 
+<h1>🧠 RIMA 명령 센터</h1>
+
+<div class="container">
+
+  <!-- 업로드 명령 -->
   <div class="card">
-    <label>📺 채널명 입력</label>
-    <input id="channel" type="text" placeholder="예: CSS AI Position"/>
-    
-    <label>📌 영상 제목</label>
-    <input id="title" type="text" placeholder="영상 제목 입력"/>
-
-    <label>📋 설명 (description)</label>
-    <textarea id="description" rows="3" placeholder="영상 설명 입력"></textarea>
-
-    <label>🧠 리마에게 명령할 문장</label>
-    <input id="command" type="text" placeholder="예: 리마야 유튜브 업로드해줘"/>
-    
-    <button onclick="runSimulation()">📁 설정파일 생성 (upload.json)</button>
+    <h3>📋 영상 업로드 지시</h3>
+    <button onclick="log('영상 업로드 지시: 폴더 내 영상 업로드 요청')">[영상 자동 업로드]</button>
+    <button onclick="log('영상 예약 요청: 15:00, 18:00')">[예약 업로드]</button>
   </div>
 
+  <!-- 업로드 결과 -->
   <div class="card">
-    <label>📜 실행 로그</label>
-    <div id="log" class="log">시뮬레이터 대기 중...</div>
+    <h3>📩 결과 보고 요청</h3>
+    <button onclick="log('오늘 업로드 성공/실패 결과 보고 요청')">[오늘 결과 보기]</button>
+    <button onclick="log('최근 업로드 링크 리스트 보기')">[링크 보기]</button>
   </div>
 
-  <script>
-    function runSimulation() {
-      const channel = document.getElementById("channel").value.trim();
-      const title = document.getElementById("title").value.trim();
-      const desc = document.getElementById("description").value.trim();
-      const command = document.getElementById("command").value.trim();
-      const log = document.getElementById("log");
+  <!-- 리마 학습 -->
+  <div class="card">
+    <h3>🧠 리마 학습 지시</h3>
+    <button onclick="log('업로드 제목 스타일 저장')">[제목 스타일 학습]</button>
+    <button onclick="log('썸네일 선호 스타일 저장')">[썸네일 방식 학습]</button>
+  </div>
 
-      if (!channel || !title || !desc || !command) {
-        log.innerText = "❗ 모든 항목을 입력해주세요.";
-        return;
-      }
+  <!-- 수정 명령 -->
+  <div class="card">
+    <h3>🔁 수정 명령</h3>
+    <button onclick="log('영상 제목 수정 명령 실행')">[제목 바꾸기]</button>
+    <button onclick="log('영상 삭제 후 재업로드 요청')">[재업로드]</button>
+  </div>
 
-      const data = {
-        채널명: channel,
-        제목: title,
-        설명: desc,
-        명령어: command,
-        썸네일: "🎯 썸네일 자동 생성 완료",
-        예약: "⏰ 예약 시간 분석 중...",
-        상태: "📢 유튜브 업로드 시뮬레이션 완료!"
-      };
+  <!-- 채널 관리 -->
+  <div class="card">
+    <h3>🗂️ 채널 관리</h3>
+    <input id="channelName" placeholder="채널명 입력" />
+    <button onclick="saveChannel()">[채널명 저장]</button>
+    <button onclick="loadChannel()">[채널명 불러오기]</button>
+  </div>
 
-      log.innerText =
-        `✅ 채널: ${data.채널명}\n` +
-        `✅ 제목: ${data.제목}\n` +
-        `✅ 설명: ${data.설명}\n` +
-        `🧠 명령어: ${data.명령어}\n` +
-        `${data.예약}\n` +
-        `${data.썸네일}\n` +
-        `${data.상태}`;
-    }
-  </script>
+  <!-- 유튜브 관련 링크 -->
+  <div class="card">
+    <h3>🔗 유튜브 바로가기</h3>
+    <a href="https://studio.youtube.com/" target="_blank"><button>🎬 유튜브 스튜디오</button></a>
+    <a href="https://youtube.com/" target="_blank"><button>▶️ 유튜브 메인</button></a>
+  </div>
+
+  <!-- GPT 연결 -->
+  <div class="card">
+    <h3>🤖 GPT 명령 전달</h3>
+    <input id="gptCommand" placeholder="GPT에게 전달할 명령" />
+    <button onclick="log('GPT 명령 실행: ' + document.getElementById('gptCommand').value)">[GPT에 전달]</button>
+  </div>
+
+  <!-- 음성 명령 -->
+  <div class="card">
+    <h3>🎤 음성 명령</h3>
+    <button onclick="startVoice()">🎙️ 마이크로 명령 입력</button>
+    <div id="voiceResult" style="margin-top:10px; font-size:0.95em; color:#555;"></div>
+  </div>
+
+  <!-- 업로드 시간 설정 -->
+  <div class="card">
+    <h3>⏰ 업로드 스케줄 설정</h3>
+    <input type="time" id="uploadTime" />
+    <button onclick="log('업로드 예약 시간 설정됨: ' + document.getElementById('uploadTime').value)">[시간 저장]</button>
+  </div>
+
+</div>
+
+<!-- 로그 창 -->
+<div class="card" style="margin-top: 30px;">
+  <h3>📢 리마 로그</h3>
+  <div id="logArea" class="log">명령 실행 내역이 여기에 표시됩니다.</div>
+</div>
+
+<script>
+  function log(text) {
+    const area = document.getElementById("logArea");
+    const time = new Date().toLocaleTimeString();
+    area.innerHTML = `🕒 [${time}] ${text}<br>` + area.innerHTML;
+  }
+
+  function saveChannel() {
+    const name = document.getElementById("channelName").value;
+    localStorage.setItem("rima_channel", name);
+    log("채널명 저장됨: " + name);
+  }
+
+  function loadChannel() {
+    const name = localStorage.getItem("rima_channel");
+    document.getElementById("channelName").value = name || '';
+    log("채널명 불러오기: " + (name || '저장된 이름 없음'));
+  }
+
+  function startVoice() {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "ko-KR";
+    recognition.start();
+    recognition.onresult = function(event) {
+      const result = event.results[0][0].transcript;
+      document.getElementById("voiceResult").innerText = "🎤 인식된 명령: " + result;
+      log("음성 명령 인식됨: " + result);
+    };
+    recognition.onerror = function() {
+      document.getElementById("voiceResult").innerText = "❌ 음성 인식 실패";
+      log("음성 인식 실패");
+    };
+  }
+</script>
+
 </body>
 </html>
