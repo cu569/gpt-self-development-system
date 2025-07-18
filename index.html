@@ -1,106 +1,65 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>리마 유튜브 업로드 시뮬레이터</title>
+  <meta charset="UTF-8" />
+  <title>NIMA 유튜브 업로드 시뮬레이터</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 2em;
-      background: #f9f9f9;
-      color: #222;
-    }
-    textarea {
-      width: 100%;
-      height: 100px;
-      font-size: 1em;
-      padding: 1em;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      resize: none;
-    }
-    button {
-      padding: 1em 2em;
-      font-size: 1em;
-      margin-top: 1em;
-      border: none;
-      background: #007bff;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    #response {
-      margin-top: 2em;
-      background: #fff;
-      padding: 1em;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      white-space: pre-wrap;
-    }
-    h3 {
-      margin-top: 2em;
-    }
-    li {
-      margin-bottom: 0.5em;
-    }
+    body { font-family: sans-serif; margin: 0; padding: 0; background: #f8f9fa; }
+    header { background: #343a40; color: white; padding: 1rem; text-align: center; }
+    .container { display: flex; flex-direction: column; padding: 2rem; gap: 1rem; max-width: 800px; margin: auto; }
+    .section { background: white; border-radius: 10px; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    textarea { width: 100%; height: 100px; border-radius: 6px; border: 1px solid #ccc; padding: 0.5rem; }
+    button { padding: 0.7rem 1.5rem; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .log { background: #e9ecef; height: 150px; overflow-y: auto; padding: 1rem; border-radius: 6px; font-size: 0.9rem; }
+    .label { font-weight: bold; margin-bottom: 0.3rem; display: block; }
   </style>
 </head>
 <body>
-  <h1>🎬 리마 유튜브 업로드 시뮬레이터</h1>
-
-  <textarea id="commandInput" placeholder="예: 영상 업로드 제목: 당구 시스템 테스트 001"></textarea>
-  <button onclick="handleCommand()">리마에게 명령</button>
-
-  <div id="response"></div>
-
-  <div id="video-result">
-    <h3>📺 리마 업로드 영상</h3>
-    <ul id="videoList"></ul>
+  <header>
+    <h1>🎬 NIMA 유튜브 업로드 시뮬레이터</h1>
+    <p>GPT + 리마 학습 / 실행 테스트용</p>
+  </header>
+  <div class="container">
+    <div class="section">
+      <label class="label">📄 제목 입력</label>
+      <input type="text" id="title" placeholder="영상 제목을 입력하세요" style="width:100%; padding:0.5rem;" />
+    </div>
+    <div class="section">
+      <label class="label">📝 설명 입력</label>
+      <textarea id="description" placeholder="영상 설명을 입력하세요..."></textarea>
+    </div>
+    <div class="section">
+      <label class="label">🔁 GPT / 리마 지시문 입력</label>
+      <textarea id="gptInput" placeholder="예: 리마야 이 영상을 7시에 공개로 업로드해줘. 썸네일도 자동으로 붙여줘."></textarea>
+    </div>
+    <div class="section">
+      <button onclick="simulateUpload()">🚀 업로드 시뮬레이션 실행</button>
+    </div>
+    <div class="section">
+      <label class="label">📋 실행 로그</label>
+      <div id="log" class="log">시뮬레이터 대기 중...</div>
+    </div>
   </div>
 
   <script>
-    const RIMA = {
-      memory: [],
-      uploadedVideos: [],
+    function simulateUpload() {
+      const title = document.getElementById("title").value;
+      const desc = document.getElementById("description").value;
+      const gpt = document.getElementById("gptInput").value;
+      const log = document.getElementById("log");
 
-      receiveCommand: function(command) {
-        this.memory.push(command);
+      log.innerHTML = "📦 입력 수집 중...<br>";
+      log.innerHTML += `▶️ 제목: <strong>${title}</strong><br>`;
+      log.innerHTML += `▶️ 설명: ${desc}<br>`;
+      log.innerHTML += `🧠 GPT 명령: ${gpt}<br>`;
+      log.innerHTML += "<br>⏳ 리마가 업로드를 준비하고 있습니다...<br>";
 
-        if (command.includes("영상 업로드 제목:")) {
-          const title = command.replace("영상 업로드 제목:", "").trim();
-          const thumbnail = `썸네일_${title.replace(/\s/g, "_")}.jpg`;
-
-          const videoData = {
-            title: title,
-            thumbnail: thumbnail,
-            timestamp: new Date().toLocaleString()
-          };
-
-          this.uploadedVideos.push(videoData);
-          this.renderUpload(videoData);
-
-          return `🎬 영상 "${title}"이(가) 업로드되었습니다 (썸네일: ${thumbnail})`;
-        }
-
-        return `🧠 리마가 명령을 기억했습니다: "${command}"`;
-      },
-
-      renderUpload: function(video) {
-        const videoList = document.getElementById("videoList");
-        const item = document.createElement("li");
-        item.innerHTML = `✅ <strong>${video.title}</strong> | 🕒 ${video.timestamp} | 🖼️ <em>${video.thumbnail}</em>`;
-        videoList.prepend(item);
-      }
-    };
-
-    function handleCommand() {
-      const input = document.getElementById("commandInput").value;
-      const response = RIMA.receiveCommand(input);
-      document.getElementById("response").innerText = response;
-      document.getElementById("commandInput").value = "";
+      setTimeout(() => {
+        log.innerHTML += "✅ 업로드 완료 (시뮬레이션)<br>";
+        log.innerHTML += "📺 유튜브 스튜디오에 자동 등록됨 (가정)<br>";
+        log.innerHTML += "<br>🧠 GPT-NIMA 간 상호작용 테스트 완료.";
+      }, 1500);
     }
   </script>
 </body>
