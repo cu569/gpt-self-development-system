@@ -1,161 +1,52 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <title>RIMA 유튜브 자동 업로드</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f4f6f9;
-      padding: 40px;
-      font-size: 20px;
-      line-height: 1.6;
-    }
+const puppeteer = require("puppeteer");
+const fs = require("fs");
+const path = require("path");
 
-    .container {
-      max-width: 700px;
-      margin: auto;
-      background: white;
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    }
+(async () => {
+  const uploadData = JSON.parse(fs.readFileSync("upload_log.json", "utf-8"));
 
-    h1 {
-      font-size: 26px;
-      margin-bottom: 10px;
-      color: #222;
-    }
+  const browser = await puppeteer.launch({
+    headless: false,
+    defaultViewport: null,
+    args: ["--start-maximized"],
+  });
 
-    label {
-      font-weight: bold;
-      margin-top: 20px;
-      display: block;
-    }
+  const page = await browser.newPage();
 
-    input[type="text"],
-    textarea,
-    select {
-      width: 100%;
-      padding: 12px;
-      margin-top: 8px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 18px;
-    }
+  // 1. 유튜브 스튜디오 업로드 페이지로 이동
+  await page.goto("https://studio.youtube.com");
 
-    input[type="file"] {
-      margin-top: 8px;
-      font-size: 18px;
-    }
+  // 2. 로그인된 상태 유지 필요
+  // (이미 로그인된 세션 쿠키를 사용하는 방식 권장)
 
-    button {
-      width: 100%;
-      padding: 14px;
-      font-size: 18px;
-      font-weight: bold;
-      background-color: #e50914;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      margin-top: 25px;
-      cursor: pointer;
-    }
+  // 3. 업로드 버튼 클릭 (직접 셀렉터 사용 또는 우회 방식 필요)
+  // 아래는 예시 셀렉터입니다 (수시로 바뀔 수 있으므로 점검 필요)
 
-    button:hover {
-      background-color: #c40812;
-    }
+  // 4. 영상 업로드
+  const fileInput = await page.$("input[type='file']");
+  await fileInput.uploadFile(path.resolve(uploadData.videoPath));
 
-    .youtube-button {
-      background-color: #FF0000;
-      margin-top: 15px;
-    }
+  // 5. 제목 입력
+  await page.waitForSelector("textarea#title-textarea");
+  await page.type("textarea#title-textarea", uploadData.title);
 
-    .log-display {
-      background: #f0f0f0;
-      padding: 20px;
-      border-radius: 12px;
-      font-family: monospace;
-      white-space: pre-wrap;
-      margin-top: 10px;
-    }
+  // 6. 설명 입력
+  await page.type("textarea#description-textarea", uploadData.description);
 
-    .section-title {
-      margin-top: 40px;
-      border-bottom: 2px solid #ccc;
-      padding-bottom: 5px;
-      font-size: 24px;
-      color: #333;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>📺 RIMA 유튜브 자동 업로드 도우미</h1>
+  // 7. 썸네일 업로드
+  const thumbInput = await page.$("input[type='file'][accept='image/*']");
+  await thumbInput.uploadFile(path.resolve(uploadData.thumbnailPath));
 
-    <button class="youtube-button" onclick="window.open('https://studio.youtube.com/', '_blank')">
-      ▶ 유튜브 스튜디오 바로가기
-    </button>
+  // 8. 예약 설정 클릭
+  await page.click("ytcp-button[aria-label='공개 옵션']"); // 공개 설정 열기
+  await page.click("tp-yt-paper-item[title='예약']"); // 예약 선택
 
-    <div class="section-title">🔴 기록 모드: 유튜브 업로드 정보 입력</div>
+  // 9. 날짜/시간 설정
+  await page.type("input[aria-label='날짜 입력']", uploadData.scheduleDate); // 예: "2025-07-18"
+  await page.type("input[aria-label='시간 입력']", uploadData.scheduleTime); // 예: "16:00"
 
-    <form id="uploadForm">
-      <label>제목:</label>
-      <input type="text" name="title" required>
+  // 10. '완료' 클릭
+  await page.click("ytcp-button[id='done-button']");
 
-      <label>설명:</label>
-      <textarea name="description" rows="4" required></textarea>
-
-      <label>썸네일 파일:</label>
-      <input type="file" name="thumbnail" accept="image/*">
-
-      <label>영상 파일:</label>
-      <input type="file" name="video" accept="video/*">
-
-      <label>공개 설정:</label>
-      <select name="privacy">
-        <option value="public">공개</option>
-        <option value="unlisted">일부공개</option>
-        <option value="private">비공개</option>
-      </select>
-
-      <button type="submit">💾 업로드 기록 저장 (upload_log.json)</button>
-    </form>
-
-    <div class="section-title">🟢 재생 모드: 기록 불러오기 및 자동 업로드</div>
-
-    <label>upload_log.json 파일 불러오기:</label>
-    <input type="file" id="logInput" accept=".json">
-
-    <div class="log-display" id="logDisplay">여기에 기록 내용이 표시됩니다...</div>
-  </div>
-
-  <script>
-    document.getElementById('uploadForm').addEventListener('submit', function (e) {
-      e.preventDefault();
-      const form = new FormData(e.target);
-      const record = {
-        title: form.get('title'),
-        description: form.get('description'),
-        thumbnail: form.get('thumbnail')?.name || '',
-        video: form.get('video')?.name || '',
-        privacy: form.get('privacy')
-      };
-      const blob = new Blob([JSON.stringify(record, null, 2)], { type: 'application/json' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = 'upload_log.json';
-      link.click();
-    });
-
-    document.getElementById('logInput').addEventListener('change', function (e) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = function () {
-        document.getElementById('logDisplay').textContent = reader.result;
-      };
-      reader.readAsText(file);
-    });
-  </script>
-</body>
-</html>
+  console.log("✅ 예약 업로드 완료!");
+})();
