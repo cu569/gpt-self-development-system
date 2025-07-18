@@ -1,83 +1,106 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>리마 자동 유튜브 업로드</title>
+  <meta charset="UTF-8">
+  <title>리마 유튜브 업로드 시뮬레이터</title>
   <style>
     body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 40px;
-      background: #fafafa;
+      font-family: Arial, sans-serif;
+      padding: 2em;
+      background: #f9f9f9;
+      color: #222;
     }
-    h1 {
-      font-size: 24px;
-    }
-    input, textarea {
-      width: 80%;
-      padding: 10px;
-      margin: 10px auto;
-      display: block;
-      font-size: 16px;
+    textarea {
+      width: 100%;
+      height: 100px;
+      font-size: 1em;
+      padding: 1em;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      resize: none;
     }
     button {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: royalblue;
-      color: white;
+      padding: 1em 2em;
+      font-size: 1em;
+      margin-top: 1em;
       border: none;
-      border-radius: 5px;
+      background: #007bff;
+      color: white;
+      border-radius: 8px;
       cursor: pointer;
     }
-    .status {
-      margin-top: 20px;
-      font-weight: bold;
-      color: green;
+    button:hover {
+      background: #0056b3;
+    }
+    #response {
+      margin-top: 2em;
+      background: #fff;
+      padding: 1em;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      white-space: pre-wrap;
+    }
+    h3 {
+      margin-top: 2em;
+    }
+    li {
+      margin-bottom: 0.5em;
     }
   </style>
 </head>
 <body>
+  <h1>🎬 리마 유튜브 업로드 시뮬레이터</h1>
 
-  <h1>🎬 리마 자동 유튜브 업로드</h1>
+  <textarea id="commandInput" placeholder="예: 영상 업로드 제목: 당구 시스템 테스트 001"></textarea>
+  <button onclick="handleCommand()">리마에게 명령</button>
 
-  <input type="file" id="fileInput" accept="video/*" />
-  <input type="text" id="titleInput" placeholder="제목 (자동 입력됨)" />
-  <textarea id="descInput" rows="4" placeholder="설명 (자동 입력됨)"></textarea>
+  <div id="response"></div>
 
-  <button onclick="startUpload()">🚀 자동 업로드 시작</button>
-  <div class="status" id="statusText">업로드 준비 중...</div>
+  <div id="video-result">
+    <h3>📺 리마 업로드 영상</h3>
+    <ul id="videoList"></ul>
+  </div>
 
   <script>
-    const fileInput = document.getElementById('fileInput');
-    const titleInput = document.getElementById('titleInput');
-    const descInput = document.getElementById('descInput');
-    const statusText = document.getElementById('statusText');
+    const RIMA = {
+      memory: [],
+      uploadedVideos: [],
 
-    fileInput.addEventListener('change', () => {
-      const file = fileInput.files[0];
-      if (file) {
-        const name = file.name.replace(/\.[^/.]+$/, "");
-        titleInput.value = `[자동] ${name}`;
-        descInput.value = `이 영상은 리마 자동 시스템으로 업로드되었습니다.\n파일명: ${file.name}`;
-        statusText.innerText = '파일 분석 완료: 자동 입력 적용됨';
+      receiveCommand: function(command) {
+        this.memory.push(command);
+
+        if (command.includes("영상 업로드 제목:")) {
+          const title = command.replace("영상 업로드 제목:", "").trim();
+          const thumbnail = `썸네일_${title.replace(/\s/g, "_")}.jpg`;
+
+          const videoData = {
+            title: title,
+            thumbnail: thumbnail,
+            timestamp: new Date().toLocaleString()
+          };
+
+          this.uploadedVideos.push(videoData);
+          this.renderUpload(videoData);
+
+          return `🎬 영상 "${title}"이(가) 업로드되었습니다 (썸네일: ${thumbnail})`;
+        }
+
+        return `🧠 리마가 명령을 기억했습니다: "${command}"`;
+      },
+
+      renderUpload: function(video) {
+        const videoList = document.getElementById("videoList");
+        const item = document.createElement("li");
+        item.innerHTML = `✅ <strong>${video.title}</strong> | 🕒 ${video.timestamp} | 🖼️ <em>${video.thumbnail}</em>`;
+        videoList.prepend(item);
       }
-    });
+    };
 
-    function startUpload() {
-      const file = fileInput.files[0];
-      if (!file) {
-        alert("파일을 선택해주세요.");
-        return;
-      }
-
-      const title = titleInput.value;
-      const desc = descInput.value;
-
-      // 실제 업로드 기능은 백엔드 또는 RPA가 필요함
-      alert(`파일: ${file.name}\n제목: ${title}\n설명: ${desc}\n\n(여기서 업로드 실행됩니다)`);
-
-      statusText.innerText = "✅ 업로드 성공 (시뮬레이션)";
+    function handleCommand() {
+      const input = document.getElementById("commandInput").value;
+      const response = RIMA.receiveCommand(input);
+      document.getElementById("response").innerText = response;
+      document.getElementById("commandInput").value = "";
     }
   </script>
 </body>
