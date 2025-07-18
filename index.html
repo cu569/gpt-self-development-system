@@ -1,7 +1,62 @@
-🎧 자막은 설정에서 선택하실 수 있습니다.
+import pyautogui
+import time
+import webbrowser
+import os
 
-🎬 자막을 켜고 시청해주셔서 감사합니다.
+# === 사용자 입력값 ===
+video_file_path = r"C:\Users\YourUsername\Videos\your_video.mp4"  # 업로드할 동영상 경로
+video_title = "자동 업로드 테스트 영상"
+video_description = "이 영상은 ChatGPT 자동 업로드 테스트입니다."
+schedule_hour = 14  # 예약 시간 (24시간 기준)
+schedule_minute = 30  # 예약 분
 
-🔍 자세한 내용은 ChatGPT.com에서 확인하실 수 있습니다.
+# === 유튜브 스튜디오 업로드 열기 ===
+webbrowser.open("https://studio.youtube.com")
+time.sleep(10)
 
-📢 이 영상은 DALL·E의 유료광고를 포함하고 있습니다.
+# === 업로드 버튼 클릭 ===
+upload_btn = pyautogui.locateCenterOnScreen("upload_icon.png", confidence=0.8)
+if upload_btn:
+    pyautogui.click(upload_btn)
+    time.sleep(3)
+else:
+    print("업로드 버튼을 찾을 수 없습니다.")
+    exit()
+
+# === 파일 업로드 ===
+pyautogui.write(video_file_path)
+pyautogui.press('enter')
+time.sleep(10)
+
+# === 제목 입력 ===
+pyautogui.press('tab', presses=2, interval=0.5)
+pyautogui.write(video_title)
+time.sleep(1)
+
+# === 설명 입력 ===
+pyautogui.press('tab')
+pyautogui.write(video_description)
+time.sleep(1)
+
+# === '다음' 버튼 3번 클릭 ===
+for _ in range(3):
+    pyautogui.press('tab', presses=3, interval=0.5)
+    pyautogui.press('enter')
+    time.sleep(3)
+
+# === 예약 업로드 설정 ===
+pyautogui.press('down')  # 공개 → 예약으로 이동
+pyautogui.press('tab', presses=4, interval=0.5)
+pyautogui.press('enter')
+time.sleep(2)
+
+# === 예약 날짜/시간 설정 ===
+pyautogui.press('tab', presses=3, interval=0.5)
+pyautogui.write(f"{schedule_hour:02}:{schedule_minute:02}")
+time.sleep(1)
+
+# === 예약 버튼 클릭 ===
+pyautogui.press('tab', presses=2, interval=0.5)
+pyautogui.press('enter')
+
+print("✅ 유튜브 영상 예약 업로드가 완료되었습니다.")
