@@ -1,62 +1,50 @@
-import pyautogui
-import time
-import webbrowser
-import os
+const puppeteer = require("puppeteer");
+const path = require("path");
 
-# === 사용자 입력값 ===
-video_file_path = r"C:\Users\YourUsername\Videos\your_video.mp4"  # 업로드할 동영상 경로
-video_title = "자동 업로드 테스트 영상"
-video_description = "이 영상은 ChatGPT 자동 업로드 테스트입니다."
-schedule_hour = 14  # 예약 시간 (24시간 기준)
-schedule_minute = 30  # 예약 분
+(async () => {
+  const upload = {
+    title: "포지션 뒤돌리기 완전 정복",
+    description: "이 영상 하나로 포지션 뒤돌리기 마스터하세요.",
+    videoPath: "C:/Users/사용자이름/Desktop/video.mp4",
+    thumbnailPath: "C:/Users/사용자이름/Desktop/thumb.jpg",
+    scheduleDate: "2025-07-18", // 예약 날짜 (YYYY-MM-DD)
+    scheduleTime: "15:00"       // 예약 시간 (24시간제, HH:mm)
+  };
 
-# === 유튜브 스튜디오 업로드 열기 ===
-webbrowser.open("https://studio.youtube.com")
-time.sleep(10)
+  const browser = await puppeteer.launch({
+    headless: false,
+    defaultViewport: null,
+    args: ["--start-maximized"]
+  });
 
-# === 업로드 버튼 클릭 ===
-upload_btn = pyautogui.locateCenterOnScreen("upload_icon.png", confidence=0.8)
-if upload_btn:
-    pyautogui.click(upload_btn)
-    time.sleep(3)
-else:
-    print("업로드 버튼을 찾을 수 없습니다.")
-    exit()
+  const page = await browser.newPage();
+  await page.goto("https://studio.youtube.com");
 
-# === 파일 업로드 ===
-pyautogui.write(video_file_path)
-pyautogui.press('enter')
-time.sleep(10)
+  console.log("🔐 로그인 후 업로드 창이 열리면 자동 실행됩니다...");
+  await page.waitForSelector("input[type='file']", { timeout: 0 });
 
-# === 제목 입력 ===
-pyautogui.press('tab', presses=2, interval=0.5)
-pyautogui.write(video_title)
-time.sleep(1)
+  const fileInput = await page.$("input[type='file']");
+  await fileInput.uploadFile(path.resolve(upload.videoPath));
 
-# === 설명 입력 ===
-pyautogui.press('tab')
-pyautogui.write(video_description)
-time.sleep(1)
+  await page.waitForSelector("textarea#title-textarea");
+  await page.type("textarea#title-textarea", upload.title);
+  await page.type("textarea#description-textarea", upload.description);
 
-# === '다음' 버튼 3번 클릭 ===
-for _ in range(3):
-    pyautogui.press('tab', presses=3, interval=0.5)
-    pyautogui.press('enter')
-    time.sleep(3)
+  const thumbInput = await page.$("input[type='file'][accept='image/*']");
+  await thumbInput.uploadFile(path.resolve(upload.thumbnailPath));
 
-# === 예약 업로드 설정 ===
-pyautogui.press('down')  # 공개 → 예약으로 이동
-pyautogui.press('tab', presses=4, interval=0.5)
-pyautogui.press('enter')
-time.sleep(2)
+  await page.click("ytcp-button[aria-label='공개 옵션']");
 
-# === 예약 날짜/시간 설정 ===
-pyautogui.press('tab', presses=3, interval=0.5)
-pyautogui.write(f"{schedule_hour:02}:{schedule_minute:02}")
-time.sleep(1)
+  await page.waitForTimeout(1000);
+  await page.click("tp-yt-paper-radio-button[name='SCHEDULE']");
 
-# === 예약 버튼 클릭 ===
-pyautogui.press('tab', presses=2, interval=0.5)
-pyautogui.press('enter')
+  await page.waitForSelector("input[aria-label='날짜 입력']");
+  await page.type("input[aria-label='날짜 입력']", upload.scheduleDate);
+  await page.type("input[aria-label='시간 입력']", upload.scheduleTime);
 
-print("✅ 유튜브 영상 예약 업로드가 완료되었습니다.")
+  await page.click("ytcp-button[id='done-button']");
+
+  console.log("✅ 예약 업로드 완료!");
+  await page.waitForTimeout(5000);
+  await browser.close();
+})();
