@@ -1,62 +1,83 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>🎬 리마 자동 유튜브 업로드</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>리마 자동 유튜브 업로드</title>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 40px; background: #f8f8f8; }
-    h1 { font-size: 24px; margin-bottom: 20px; }
-    input, textarea, button {
-      display: block; margin: 10px auto;
-      width: 90%; max-width: 500px;
-      padding: 10px; font-size: 16px;
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 40px;
+      background: #fafafa;
+    }
+    h1 {
+      font-size: 24px;
+    }
+    input, textarea {
+      width: 80%;
+      padding: 10px;
+      margin: 10px auto;
+      display: block;
+      font-size: 16px;
     }
     button {
-      background: #007bff; color: white;
-      border: none; border-radius: 5px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: royalblue;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
     }
-    .log { margin-top: 20px; font-weight: bold; color: green; }
+    .status {
+      margin-top: 20px;
+      font-weight: bold;
+      color: green;
+    }
   </style>
 </head>
 <body>
+
   <h1>🎬 리마 자동 유튜브 업로드</h1>
 
-  <input type="file" id="videoFile" accept="video/*">
-  <input type="text" id="title" placeholder="제목 (자동 입력됨)" readonly>
-  <textarea id="description" rows="4" placeholder="설명 (자동 입력됨)" readonly></textarea>
+  <input type="file" id="fileInput" accept="video/*" />
+  <input type="text" id="titleInput" placeholder="제목 (자동 입력됨)" />
+  <textarea id="descInput" rows="4" placeholder="설명 (자동 입력됨)"></textarea>
 
   <button onclick="startUpload()">🚀 자동 업로드 시작</button>
-  <div id="log" class="log">업로드 준비 중...</div>
+  <div class="status" id="statusText">업로드 준비 중...</div>
 
   <script>
-    const fileInput = document.getElementById('videoFile');
-    const titleInput = document.getElementById('title');
-    const descriptionInput = document.getElementById('description');
-    const logDiv = document.getElementById('log');
+    const fileInput = document.getElementById('fileInput');
+    const titleInput = document.getElementById('titleInput');
+    const descInput = document.getElementById('descInput');
+    const statusText = document.getElementById('statusText');
 
     fileInput.addEventListener('change', () => {
       const file = fileInput.files[0];
       if (file) {
-        const baseName = file.name.replace(/\.[^/.]+$/, "");
-        titleInput.value = `${baseName} | CSS 포지션 AI 업로드`;
-        descriptionInput.value = `이 영상은 리마 GPT 시스템에 의해 자동 생성되어 업로드됩니다.`;
-        logDiv.textContent = "✅ 파일 선택됨. 업로드 준비 완료!";
+        const name = file.name.replace(/\.[^/.]+$/, "");
+        titleInput.value = `[자동] ${name}`;
+        descInput.value = `이 영상은 리마 자동 시스템으로 업로드되었습니다.\n파일명: ${file.name}`;
+        statusText.innerText = '파일 분석 완료: 자동 입력 적용됨';
       }
     });
 
     function startUpload() {
       const file = fileInput.files[0];
       if (!file) {
-        logDiv.textContent = "❗ 영상 파일을 먼저 선택해주세요.";
+        alert("파일을 선택해주세요.");
         return;
       }
 
-      logDiv.textContent = "🚀 업로드 중...";
+      const title = titleInput.value;
+      const desc = descInput.value;
 
-      setTimeout(() => {
-        logDiv.textContent = "✅ 유튜브 업로드 완료 (시뮬레이션)";
-        alert("🎉 영상이 성공적으로 업로드되었습니다!");
-      }, 2000);
+      // 실제 업로드 기능은 백엔드 또는 RPA가 필요함
+      alert(`파일: ${file.name}\n제목: ${title}\n설명: ${desc}\n\n(여기서 업로드 실행됩니다)`);
+
+      statusText.innerText = "✅ 업로드 성공 (시뮬레이션)";
     }
   </script>
 </body>
