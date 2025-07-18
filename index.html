@@ -1,46 +1,7 @@
-const puppeteer = require("puppeteer");
-const path = require("path");
+🎧 자막은 설정에서 선택하실 수 있습니다.
 
-(async () => {
-  const upload = {
-    title: "포지션 뒤돌리기 완전 정복",
-    description: "이 영상 하나로 포지션 뒤돌리기 마스터하세요.",
-    videoPath: "C:/Users/사용자이름/Desktop/video.mp4",
-    thumbnailPath: "C:/Users/사용자이름/Desktop/thumb.jpg",
-    scheduleDate: "2025-07-18",   // 예약 날짜
-    scheduleTime: "15:00"         // 예약 시간 (24시간제)
-  };
+🎬 자막을 켜고 시청해주셔서 감사합니다.
 
-  const browser = await puppeteer.launch({
-    headless: false,
-    defaultViewport: null,
-    args: ["--start-maximized"]
-  });
+🔍 자세한 내용은 ChatGPT.com에서 확인하실 수 있습니다.
 
-  const page = await browser.newPage();
-  await page.goto("https://studio.youtube.com");
-
-  console.log("🔐 로그인 후 업로드 창이 열리면 자동 실행됩니다...");
-  await page.waitForSelector("input[type='file']", { timeout: 0 });
-
-  const fileInput = await page.$("input[type='file']");
-  await fileInput.uploadFile(path.resolve(upload.videoPath));
-
-  await page.waitForSelector("textarea#title-textarea");
-  await page.type("textarea#title-textarea", upload.title);
-  await page.type("textarea#description-textarea", upload.description);
-
-  const thumbInput = await page.$("input[type='file'][accept='image/*']");
-  await thumbInput.uploadFile(path.resolve(upload.thumbnailPath));
-
-  await page.click("ytcp-button[aria-label='공개 옵션']");
-  await page.waitForTimeout(500);
-  await page.click("tp-yt-paper-item[title='예약']");
-  await page.waitForTimeout(500);
-
-  await page.type("input[aria-label='날짜 입력']", upload.scheduleDate);
-  await page.type("input[aria-label='시간 입력']", upload.scheduleTime);
-
-  await page.click("ytcp-button[id='done-button']");
-  console.log("✅ 예약 업로드 완료!");
-})();
+📢 이 영상은 DALL·E의 유료광고를 포함하고 있습니다.
