@@ -2,58 +2,169 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>리마 유튜브 업로드 시뮬레이터</title>
+  <title>리마 유튜브 자동화 시뮬레이터 - 완전 통합본</title>
   <style>
-    body { font-family: Arial, sans-serif; padding:2em; background:#f9f9f9; color:#222;}
-    textarea { width:100%; height:100px; font-size:1em; padding:1em; border:1px solid #ccc; border-radius:8px; resize:none;}
-    button { padding:1em 2em; font-size:1em; margin-top:1em; border:none; background:#007bff; color:white; border-radius:8px; cursor:pointer;}
-    button:hover { background:#0056b3; }
-    #response { margin-top:2em; background:#fff; padding:1em; border-radius:8px; border:1px solid #ddd; white-space:pre-wrap;}
-    h3 { margin-top:2em; }
-    li { margin-bottom:0.5em; }
+    body { font-family: Arial, sans-serif; background: #f4f7fa; color: #222; margin:0; padding:2em;}
+    .container { max-width:600px; margin:auto; background:#fff; border-radius:16px; box-shadow:0 2px 16px #0001; padding:2em;}
+    h1 { color:#1976d2; margin-bottom:0.5em; }
+    label { margin-top:1em; display:block; }
+    input[type="text"], textarea, input[type="datetime-local"] {
+      width:100%; padding:0.7em; border-radius:8px; border:1px solid #bbb; margin-top:0.3em; margin-bottom:1em;
+      font-size:1em;
+    }
+    input[type="file"] { margin-top:0.6em; margin-bottom:1em; }
+    button {
+      padding:0.8em 1.5em; margin:0.3em 0.5em 0.7em 0; font-size:1em;
+      background:#1976d2; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;
+      transition:background 0.15s;
+    }
+    button:hover { background:#0f519b; }
+    #status, #response {
+      margin-top:1.2em; padding:1em; background:#f7fbff; border-radius:8px; border:1px solid #dde;
+      min-height:2em; font-size:1em; word-break:break-all;
+    }
+    #videoList li { margin-bottom:0.7em; background:#f1f1f5; padding:0.7em; border-radius:6px;}
+    .btn-row { margin-bottom:1.2em;}
+    .bold { font-weight:bold; color:#1976d2;}
+    .mini { font-size:0.96em; color:#666;}
+    .log-block { background:#fafbfc; padding:0.5em; border-radius:6px; margin-top:0.5em; border:1px solid #e2e2ef;}
   </style>
 </head>
 <body>
-  <h1>🎬 리마 유튜브 업로드 시뮬레이터</h1>
-  <textarea id="commandInput" placeholder="예: 영상 업로드 제목: 포지션 테스트 001"></textarea>
-  <button onclick="handleCommand()">리마에게 명령</button>
-  <div id="response"></div>
-  <div id="video-result">
-    <h3>📺 리마 업로드 영상</h3>
+  <div class="container">
+    <h1>🎬 리마 유튜브 자동화 시뮬레이터</h1>
+    <div class="btn-row">
+      <button onclick="clearInputs()">입력값 초기화</button>
+      <button onclick="clearLog()">명령 기록 초기화</button>
+      <button onclick="showRimaMemory()">🧠 리마 명령 기록</button>
+    </div>
+    <label for="videoTitle">📝 영상 제목</label>
+    <input type="text" id="videoTitle" placeholder="예: 리마 자동화 테스트 영상" />
+    <label for="videoDesc">📄 영상 설명</label>
+    <textarea id="videoDesc" rows="2" placeholder="영상 설명 입력..."></textarea>
+    <label for="videoThumb">🖼️ 썸네일 파일명</label>
+    <input type="text" id="videoThumb" placeholder="예: thumb001.jpg (예시)" />
+    <label for="videoTime">🕐 예약 업로드 시간</label>
+    <input type="datetime-local" id="videoTime" />
+    <div class="btn-row">
+      <button onclick="simulateUpload()">📤 업로드</button>
+      <button onclick="simulateSchedule()">⏰ 예약 업로드</button>
+      <button onclick="simulateAutoRepeat()">🔁 반복 업로드</button>
+    </div>
+    <div id="status"></div>
+    <div id="response"></div>
+    <h3>📺 업로드 영상 리스트</h3>
     <ul id="videoList"></ul>
+    <div class="log-block">
+      <div class="bold">💬 GPT↔리마 채팅 명령</div>
+      <input type="text" id="chatInput" placeholder="GPT → 리마에게 명령 입력..." style="width:65%;padding:0.5em;border-radius:6px;">
+      <button onclick="sendToRIMA()" style="padding:0.5em;">보내기</button>
+      <div id="chat-log" style="background:#222; color:#eee; margin-top:0.7em; min-height:60px; border-radius:6px; padding:0.7em; font-family:monospace; font-size:15px; max-height:150px; overflow-y:auto;"></div>
+    </div>
   </div>
   <script>
     const RIMA = {
       memory: [],
       uploadedVideos: [],
       receiveCommand: function(command) {
-        this.memory.push(command);
-        if (command.includes("영상 업로드 제목:")) {
-          const title = command.replace("영상 업로드 제목:", "").trim();
-          const thumbnail = `썸네일_${title.replace(/\s/g, "_")}.jpg`;
+        this.memory.push({
+          time: new Date().toLocaleString(),
+          command: command,
+          result: "성공 (시뮬레이션)"
+        });
+        // 자동 업로드
+        if(command.startsWith("업로드:")) {
+          const parts = command.split(",");
+          const title = (parts[0]||"").replace("업로드:","").trim();
+          const desc = (parts[1]||"").replace("설명:","").trim();
+          const thumb = (parts[2]||"").replace("썸네일:","").trim();
+          const time = (parts[3]||"").replace("예약:","").trim();
           const videoData = {
-            title: title,
-            thumbnail: thumbnail,
+            title, desc, thumb, time,
             timestamp: new Date().toLocaleString()
           };
           this.uploadedVideos.push(videoData);
           this.renderUpload(videoData);
-          return `🎬 영상 "${title}"이(가) 업로드되었습니다 (썸네일: ${thumbnail})`;
+          return `🎬 영상 "${title}" 업로드 완료 (${time ? "예약: "+time : "즉시 업로드"})`;
         }
         return `🧠 리마가 명령을 기억했습니다: "${command}"`;
       },
       renderUpload: function(video) {
         const videoList = document.getElementById("videoList");
         const item = document.createElement("li");
-        item.innerHTML = `✅ <strong>${video.title}</strong> | 🕒 ${video.timestamp} | 🖼️ <em>${video.thumbnail}</em>`;
+        item.innerHTML = `✅ <strong>${video.title}</strong> <span class="mini">| 🕒 ${video.timestamp} ${video.time? "| 예약: "+video.time:""}</span><br>
+          📄 ${video.desc||"설명 없음"}<br>🖼️ <em>${video.thumb||"썸네일 없음"}</em>`;
         videoList.prepend(item);
+      },
+      getMemory: function() {
+        return this.memory.map(
+          (item, i) => `${i+1}. [${item.time}] ${item.command} → ${item.result}`
+        ).join("\n");
       }
     };
-    function handleCommand() {
-      const input = document.getElementById("commandInput").value;
-      const response = RIMA.receiveCommand(input);
-      document.getElementById("response").innerText = response;
-      document.getElementById("commandInput").value = "";
+
+    function clearInputs() {
+      document.getElementById("videoTitle").value = "";
+      document.getElementById("videoDesc").value = "";
+      document.getElementById("videoThumb").value = "";
+      document.getElementById("videoTime").value = "";
+      document.getElementById("status").innerText = "입력값 초기화 완료!";
+    }
+    function clearLog() {
+      RIMA.memory = [];
+      RIMA.uploadedVideos = [];
+      document.getElementById("videoList").innerHTML = "";
+      document.getElementById("response").innerText = "기록 초기화 완료!";
+    }
+    function simulateUpload() {
+      const title = document.getElementById("videoTitle").value.trim();
+      const desc = document.getElementById("videoDesc").value.trim();
+      const thumb = document.getElementById("videoThumb").value.trim();
+      if(!title) { document.getElementById("status").innerText = "❗ 영상 제목은 필수!"; return; }
+      const cmd = `업로드:${title}, 설명:${desc}, 썸네일:${thumb}, 예약:`;
+      const res = RIMA.receiveCommand(cmd);
+      document.getElementById("status").innerText = res;
+      document.getElementById("response").innerText = "즉시 업로드 완료!";
+    }
+    function simulateSchedule() {
+      const title = document.getElementById("videoTitle").value.trim();
+      const desc = document.getElementById("videoDesc").value.trim();
+      const thumb = document.getElementById("videoThumb").value.trim();
+      const time = document.getElementById("videoTime").value;
+      if(!title||!time) { document.getElementById("status").innerText = "❗ 제목/예약시간 필수!"; return; }
+      const cmd = `업로드:${title}, 설명:${desc}, 썸네일:${thumb}, 예약:${time}`;
+      const res = RIMA.receiveCommand(cmd);
+      document.getElementById("status").innerText = res;
+      document.getElementById("response").innerText = "예약 업로드 완료!";
+    }
+    function simulateAutoRepeat() {
+      const title = document.getElementById("videoTitle").value.trim();
+      const desc = document.getElementById("videoDesc").value.trim();
+      const thumb = document.getElementById("videoThumb").value.trim();
+      if(!title) { document.getElementById("status").innerText = "❗ 영상 제목은 필수!"; return; }
+      let msg = "";
+      for(let i=1; i<=3; ++i) {
+        const t = `${title}_${i}`;
+        const cmd = `업로드:${t}, 설명:${desc}, 썸네일:${thumb}, 예약:`;
+        msg += RIMA.receiveCommand(cmd)+"\n";
+      }
+      document.getElementById("status").innerText = "🔁 반복 업로드 3회 실행 완료!";
+      document.getElementById("response").innerText = msg;
+    }
+    function showRimaMemory() {
+      document.getElementById("response").innerHTML = "<pre>"+RIMA.getMemory()+"</pre>";
+    }
+    // 채팅 명령
+    function sendToRIMA() {
+      const input = document.getElementById("chatInput");
+      const chatLog = document.getElementById("chat-log");
+      const userCommand = input.value.trim();
+      if (!userCommand) return;
+      chatLog.innerHTML += `<div style="color:#0f0;">GPT: ${userCommand}</div>`;
+      const response = RIMA.receiveCommand(userCommand);
+      chatLog.innerHTML += `<div style="color:#0ff;">RIMA: ${response}</div><br>`;
+      input.value = "";
+      chatLog.scrollTop = chatLog.scrollHeight;
     }
   </script>
 </body>
