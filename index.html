@@ -1,1 +1,30 @@
- https://cu569.github.io/css-simulator-v2/
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My YouTube Webapp</title>
+  <style>
+    /* ===== 여기에 style.css 전체 내용을 붙이세요 ===== */
+    body { font-family: sans-serif; background: #fafafa; margin:0; padding:0; }
+    /* …중략… */
+  </style>
+</head>
+<body>
+  <!-- ===== 여기에 index.html 내용(헤더, div, 버튼 등) 전체를 붙이세요 ===== -->
+  <h1>유튜브 업로더</h1>
+  <input type="file" id="fileInput" />
+  <button id="uploadBtn">업로드</button>
+  <!-- …중략… -->
+
+  <script>
+    // ===== 여기에 script.js 전체 내용을 붙이세요 =====
+    document.getElementById('uploadBtn').addEventListener('click', () => {
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) return alert('파일을 선택하세요');
+      // …업로드 로직…
+    });
+    // …중략…
+  </script>
+</body>
+</html>
