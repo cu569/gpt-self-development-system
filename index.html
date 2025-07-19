@@ -2,68 +2,119 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>업로드 리마 실행기</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🌐 리마 유튜브 자동화 대시보드 (전문가)</title>
   <style>
-    body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
-    .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    h1 { text-align: center; margin-bottom: 1rem; }
-    .controls { display: flex; flex-direction: column; gap: 10px; }
-    input[type="file"] { font-size: 1rem; }
-    button { padding: 10px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; }
-    button:hover { background: #0056b3; }
-    .chatbox { margin-top: 20px; height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background: #fafafa; }
-    .msg { margin-bottom: 8px; }
-    .bold { font-weight: bold; }
+    body { margin:0; font-family: 'Segoe UI', sans-serif; background:#f5f7fa; }
+    header { background:#1f2a38; color:white; padding:1rem; text-align:center; }
+    header a { color:#9ec9f5; margin:0 .5rem; text-decoration:none; }
+    .grid { display:grid; grid-template-columns:1fr 2fr; gap:1rem; padding:1rem; }
+    .card { background:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); padding:1rem; }
+    .chat-box { height:300px; overflow-y:auto; background:#222; color:#eee; padding:1rem; border-radius:6px; font-size:.9rem; }
+    .chat-entry { margin:0 .2rem .6rem; }
+    .chat-entry span { font-weight:bold; margin-right:.4rem; }
+    .controls button, .controls select, .controls input[type="datetime-local"] {
+      margin-top:.5rem; padding:.6rem 1rem; font-size:1rem; border-radius:6px;
+      border:1px solid #ccc; background:white; cursor:pointer;
+    }
+    .controls button { background:#007bff; color:white; border:none; }
+    .controls button:hover { background:#0056b3; }
+    .flex { display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🎬 업로드 리마 실행기</h1>
 
-    <div class="controls">
-      <label>📁 영상 파일 선택:</label>
-      <input type="file" id="videoFile" accept="video/*" />
+<header>
+  <h1>🌐 리마 유튜브 자동화 대시보드 (전문가 모드)</h1>
+  <a href="https://youtube.com" target="_blank">▶ YouTube</a>
+  <a href="https://studio.youtube.com" target="_blank">▶ YouTube Studio</a>
+</header>
 
-      <button onclick="runRima1()">🤖 리마1 따라하기 (업로드 시뮬레이션)</button>
-      <button onclick="runRima2()">🧠 리마2 스스로 실행 (반복)</button>
+<div class="grid">
+
+  <!-- 좌측: 채팅 & 학습 공유 -->
+  <div class="card">
+    <h2>💬 통합 채팅창</h2>
+    <div id="chat" class="chat-box">
+      <div class="chat-entry"><span>시스템</span>대기 중…</div>
     </div>
+    <div class="flex">
+      <input type="text" id="chatInput" placeholder="메시지 입력 (사용자/GPT/리더)" style="flex:1;">
+      <button onclick="sendChat()">전송</button>
+    </div>
+    <h3 style="margin-top:1rem">📚 학습 지시 공유</h3>
+    <textarea id="leaderInput" rows="3" style="width:100%;border:1px solid #ccc;border-radius:6px;" placeholder="리더가 리마에게 학습 지시를 입력하세요…"></textarea>
+    <button onclick="shareLearning()">학습 지시 전달</button>
+  </div>
 
-    <div class="chatbox" id="chatLog">
-      <div class="msg"><span class="bold">시스템:</span> 파일을 선택하고 리마1 버튼을 눌러 업로드를 시작하세요.</div>
+  <!-- 우측: 업로드 + 리마 동작 패널 -->
+  <div class="card">
+    <h2>📤 업로드 & 리마 실행</h2>
+    <div class="controls">
+      <label>1. 영상 업로드 완료 후 클릭</label><br>
+      <button onclick="userUploaded()">✔ 업로드됨 (나)</button><br>
+      <label>2. 예약 시간 선택</label><br>
+      <input type="datetime-local" id="schedTime"><br>
+      <label>3. 업로드 언어 설정</label><br>
+      <select id="langSelect">
+        <option value="ko">한국어</option>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="zh">中文</option>
+        <option value="ar">العربية</option>
+      </select><br>
+      <div class="flex">
+        <button onclick="runRima1()">🤖 리마1 따라하기</button>
+        <button onclick="runRima2()">🧠 리마2 스스로 실행</button>
+      </div>
     </div>
   </div>
 
-  <script>
-    const chatLog = document.getElementById('chatLog');
+</div>
 
-    function append(msg) {
-      const div = document.createElement('div');
-      div.className = 'msg';
-      div.innerHTML = msg;
-      chatLog.appendChild(div);
-      chatLog.scrollTop = chatLog.scrollHeight;
-    }
+<script>
+  const chat = document.getElementById('chat');
+  function append(sender, text) {
+    const div = document.createElement('div');
+    div.className='chat-entry';
+    div.innerHTML = `<span>${sender}</span>${text}`;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
 
-    function runRima1() {
-      const fileInput = document.getElementById('videoFile');
-      if (!fileInput.files.length) {
-        append('<span class="bold">리마1:</span> 먼저 업로드할 영상을 선택해주세요.');
-        return;
-      }
-      const fileName = fileInput.files[0].name;
-      append(`<span class="bold">리마1:</span> 영상 파일 선택됨 → <code>${fileName}</code>`);
-      append('<span class="bold">리마1:</span> 업로드 중...');
-      setTimeout(() => {
-        append('<span class="bold">리마1:</span> ✅ 업로드 완료!');
-      }, 2000);
-    }
+  function sendChat() {
+    const msg = document.getElementById('chatInput').value.trim();
+    if(!msg) return;
+    append('사용자', msg);
+    document.getElementById('chatInput').value='';
+    // GPT 모의 응답
+    setTimeout(()=> append('GPT', `“${msg}”에 대해 처리 후 리마에 지시합니다.`), 600);
+  }
 
-    function runRima2() {
-      append('<span class="bold">리마2:</span> 스스로 실행 준비 완료. 반복 업로드 시뮬레이션 시작...');
-      setTimeout(() => {
-        append('<span class="bold">리마2:</span> ✅ 리마2 자동 실행 완료!');
-      }, 2000);
-    }
-  </script>
+  function shareLearning(){
+    const t = document.getElementById('leaderInput').value.trim();
+    if(!t) return;
+    append('리더', t);
+    setTimeout(()=> append('리마', '학습 지시 수신! 저장 및 실행 준비 완료.'), 600);
+  }
+
+  function userUploaded(){
+    append('나', '영상 업로드 완료했습니다.');
+    setTimeout(()=> append('GPT', '업로드 확인 → 리마에 전달합니다.'), 600);
+  }
+
+  function runRima1(){
+    const time = document.getElementById('schedTime').value;
+    const lang = document.getElementById('langSelect').value;
+    append('리마1', `사용자 동작 따라 업로드 중… (언어:${lang}, 예약:${time||'즉시'})`);
+    setTimeout(()=> append('리마1', '✅ 리마1 업로드 절차 완료!'), 1200);
+  }
+
+  function runRima2(){
+    append('리마2', '자가 학습 기반 자동 예약 업로드 실행…');
+    setTimeout(()=> append('리마2', '✅ 리마2 자동 실행 및 학습 완료!'), 1600);
+  }
+</script>
+
 </body>
 </html>
