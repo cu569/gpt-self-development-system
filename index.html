@@ -1,42 +1,42 @@
 /*
-설치 및 실행 방법:
-1. 프로젝트 생성 (Vite):
-   npm create vite@latest rima-youtube-app --template react
-2. 프로젝트 디렉토리로 이동:
-   cd rima-youtube-app
-3. Tailwind CSS 설치 및 설정:
-   npm install -D tailwindcss postcss autoprefixer
-   npx tailwindcss init -p
-   // tailwind.config.js 에서 content 경로를 아래와 같이 설정
-   module.exports = {
-     content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
-     theme: { extend: {} },
-     plugins: [],
-   };
-   // src/index.css 파일에 추가
-   @tailwind base;
-   @tailwind components;
-   @tailwind utilities;
-4. 필수 패키지 설치:
-   npm install react-router-dom
-5. src/App.jsx 파일을 아래 코드로 교체
-6. 개발 서버 실행:
-   npm run dev
-7. 브라우저에서 http://localhost:5173 접속 후 UI 확인
+프로젝트 구조:
+
+rima-youtube-app/
+├── index.html
+├── package.json
+└── src/
+    ├── main.jsx
+    ├── App.jsx
+    └── index.css
 */
 
+// src/main.jsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';  // Tailwind 스타일 로드
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// src/index.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// src/App.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import './index.css'; // Tailwind CSS 스타일 로드
 
 export default function App() {
-  // 채팅 상태
   const [messages, setMessages] = useState([
     { from: 'system', text: '안녕하세요! Rima 에이전트를 통해 유튜브 예약 업로드를 실행할 수 있습니다.' }
   ]);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
 
-  // 새 메시지 추가 시 스크롤
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -44,7 +44,6 @@ export default function App() {
   const handleSend = () => {
     if (!input.trim()) return;
     setMessages(prev => [...prev, { from: 'user', text: input }]);
-    // GPT/Rima 응답 모킹
     setTimeout(() => {
       setMessages(prev => [...prev, { from: 'rima', text: `"${input}" 명령을 수행 중입니다... ✅` }]);
     }, 800);
@@ -53,7 +52,7 @@ export default function App() {
 
   return (
     <div className="h-screen grid grid-cols-3 gap-4 p-4 bg-gray-100">
-      {/* 왼쪽: YouTube Studio */}
+      {/* YouTube Studio 영역 */}
       <div className="col-span-2 bg-white rounded-2xl shadow p-4 flex flex-col">
         <h2 className="text-2xl font-bold mb-4">YouTube 스튜디오</h2>
         <iframe
@@ -64,9 +63,8 @@ export default function App() {
         />
       </div>
 
-      {/* 오른쪽: 채팅창 및 진행률 */}
+      {/* 채팅 & 대시보드 */}
       <div className="flex flex-col space-y-4">
-        {/* 채팅창 */}
         <div className="flex-1 bg-white rounded-2xl shadow p-4 flex flex-col">
           <h2 className="text-xl font-semibold mb-2">GPT ↔ Rima 채팅</h2>
           <div className="flex-1 bg-gray-50 rounded-lg p-3 overflow-y-auto">
@@ -104,7 +102,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* 진행률 대시보드 */}
         <div className="h-60 bg-white rounded-2xl shadow p-4 flex flex-col">
           <h2 className="text-xl font-semibold mb-3">진행률 대시보드</h2>
           <ul className="flex-1 overflow-y-auto space-y-2 text-gray-700">
