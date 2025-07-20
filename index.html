@@ -1,77 +1,48 @@
-// upload.js
-// 1) npm init -y
-// 2) npm install puppeteer dotenv
-// 3) .env 파일에 YT_EMAIL, YT_PASSWORD, VIDEO_PATH, VIDEO_TITLE, VIDEO_DESC, SCHEDULE_DATETIME 세팅
+import React from 'react';
 
-require('dotenv').config();
-const puppeteer = require('puppeteer');
+export default function App() {
+  return (
+    <div className="h-screen grid grid-cols-3 gap-2 p-2">
+      {/* YouTube Studio View */}
+      <div className="col-span-2 rounded-2xl shadow p-2 overflow-hidden">
+        <h2 className="text-xl font-semibold mb-2">YouTube Studio</h2>
+        <iframe
+          src="https://studio.youtube.com/channel/UC/upload"
+          className="w-full h-full rounded-lg border"
+          allow="autoplay; fullscreen"
+        />
+      </div>
 
-(async () => {
-  const {
-    YT_EMAIL,
-    YT_PASSWORD,
-    VIDEO_PATH,
-    VIDEO_TITLE,
-    VIDEO_DESC,
-    SCHEDULE_DATETIME // 형식: 'YYYY-MM-DDTHH:mm' 예: '2025-07-25T15:30'
-  } = process.env;
+      {/* Right Sidebar: Chat + Progress */}
+      <div className="flex flex-col space-y-2">
+        {/* Chat Window */}
+        <div className="flex-1 rounded-2xl shadow p-2 flex flex-col">
+          <h2 className="text-lg font-semibold mb-1">GPT ↔ Rima Chat</h2>
+          <div className="flex-1 bg-gray-50 rounded-lg p-2 overflow-y-auto">
+            {/* Chat messages will render here */}
+          </div>
+          <div className="mt-2 flex">
+            <input
+              type="text"
+              placeholder="메시지 입력..."
+              className="flex-1 rounded-l-lg border p-2 focus:outline-none"
+            />
+            <button className="rounded-r-lg border px-4 py-2">전송</button>
+          </div>
+        </div>
 
-  const browser = await puppeteer.launch({
-    headless: false,        // 업로드 과정을 눈으로 확인하려면 false
-    defaultViewport: null,
-    args: ['--no-sandbox','--disable-setuid-sandbox']
-  });
-  const page = await browser.newPage();
-
-  // 1. YouTube 로그인
-  await page.goto('https://accounts.google.com/ServiceLogin');
-  await page.type('input[type="email"]', YT_EMAIL, {delay: 50});
-  await page.click('#identifierNext');
-  await page.waitForTimeout(2000);
-  await page.type('input[type="password"]', YT_PASSWORD, {delay: 50});
-  await page.click('#passwordNext');
-  await page.waitForNavigation({waitUntil: 'networkidle2'});
-
-  // 2. YouTube Studio 업로드 페이지로 이동
-  await page.goto('https://studio.youtube.com/channel/UC/upload', {waitUntil: 'networkidle2'});
-
-  // 3. 파일 선택
-  const [fileChooser] = await Promise.all([
-    page.waitForFileChooser(),
-    page.click('input[type="file"]')
-  ]);
-  await fileChooser.accept([VIDEO_PATH]);
-
-  // 4. 메타데이터 입력
-  await page.waitForSelector('#textbox', {visible: true});
-  // 제목
-  const titleBox = (await page.$$('#textbox'))[0];
-  await titleBox.click({clickCount: 3});
-  await titleBox.type(VIDEO_TITLE);
-  // 설명
-  const descBox = (await page.$$('#textbox'))[1];
-  await descBox.click();
-  await descBox.type(VIDEO_DESC);
-
-  // 5. 예약 업로드 설정
-  // '다음' 버튼 3회
-  for (let i=0; i<3; i++) {
-    await page.click('ytcp-button#next-button');
-    await page.waitForTimeout(1000);
-  }
-  // 공개 설정에서 '예약' 선택
-  await page.click('tp-yt-paper-radio-button[name="SCHEDULE"]');
-  // 날짜/시간 입력
-  await page.evaluate((dt) => {
-    const [date, time] = dt.split('T');
-    document.querySelector('input#date-input').value = date;
-    document.querySelector('input#time-input').value = time;
-  }, SCHEDULE_DATETIME);
-
-  // '예약' 버튼 클릭
-  await page.click('ytcp-button#done-button');
-  await page.waitForTimeout(2000);
-
-  console.log('✅ 예약 업로드 완료:', VIDEO_PATH, '→', SCHEDULE_DATETIME');
-  await browser.close();
-})();
+        {/* Progress Dashboard */}
+        <div className="h-48 rounded-2xl shadow p-2 bg-white flex flex-col">
+          <h2 className="text-lg font-semibold mb-1">진행률 대시보드</h2>
+          <ul className="space-y-1 overflow-y-auto flex-1">
+            <li>📈 업로드: 대기 중</li>
+            <li>📚 학습 과제: 메타데이터 최적화</li>
+            <li>✅ 지난 업로드 성공률: 95%</li>
+            <li>🕒 다음 업데이트: 자정</li>
+          </ul>
+          <button className="mt-2 rounded-lg border p-2">실시간 새로고침</button>
+        </div>
+      </div>
+    </div>
+  );
+}
