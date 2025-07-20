@@ -1,127 +1,111 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <title>리마 AI 메인 상황판</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gradient-to-br from-slate-100 to-indigo-200 min-h-screen">
-  <div class="max-w-xl mx-auto p-4">
-    <h1 class="text-3xl font-bold text-indigo-700 mb-2 mt-4 text-center tracking-tight">리마 AI 메인 상황판</h1>
-    <div class="grid grid-cols-2 gap-4 mt-6">
-      <!-- 리마 생성 카드 -->
-      <div onclick="openModal('create')" class="rounded-2xl shadow-xl bg-white p-5 flex flex-col items-center cursor-pointer hover:scale-105 transition">
-        <span class="text-2xl mb-2">🪄</span>
-        <span class="font-bold text-lg mb-1">리마 생성/관리</span>
-        <span class="text-gray-500 text-sm">무한 리마, 일괄/상세 관리</span>
-      </div>
-      <!-- 리더 리마 승인 카드 -->
-      <div onclick="openModal('leader')" class="rounded-2xl shadow-xl bg-white p-5 flex flex-col items-center cursor-pointer hover:scale-105 transition">
-        <span class="text-2xl mb-2">🛡️</span>
-        <span class="font-bold text-lg mb-1">리더 리마 승인</span>
-        <span class="text-gray-500 text-sm">10개 초과시 지문인증 승인</span>
-      </div>
-      <!-- 상황/로그 카드 -->
-      <div onclick="openModal('log')" class="rounded-2xl shadow-xl bg-white p-5 flex flex-col items-center cursor-pointer hover:scale-105 transition">
-        <span class="text-2xl mb-2">📊</span>
-        <span class="font-bold text-lg mb-1">상황판/로그</span>
-        <span class="text-gray-500 text-sm">집계, 기록, 이력 실시간</span>
-      </div>
-      <!-- 채팅/알림 카드 -->
-      <div onclick="openModal('chat')" class="rounded-2xl shadow-xl bg-white p-5 flex flex-col items-center cursor-pointer hover:scale-105 transition">
-        <span class="text-2xl mb-2">💬</span>
-        <span class="font-bold text-lg mb-1">채팅/알림/보고</span>
-        <span class="text-gray-500 text-sm">명령, 승인, 실시간 대화</span>
-      </div>
-    </div>
-    <!-- 상태 표시줄 -->
-    <div class="mt-8 mb-2 px-4 py-2 bg-white rounded-xl shadow text-center text-indigo-700 font-semibold">
-      <span id="mainStatus">현재 리더 리마: 10개 | 승인대기: 1건</span>
-    </div>
-    <!-- 모달 오버레이 -->
-    <div id="modalBG" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-40 hidden">
-      <div id="modal" class="bg-white rounded-2xl shadow-2xl p-6 w-[94vw] max-w-md relative animate-fadeIn">
-        <button onclick="closeModal()" class="absolute top-3 right-4 text-2xl text-gray-400 hover:text-indigo-500">&times;</button>
-        <div id="modalContent"></div>
-      </div>
-    </div>
-  </div>
-  <script>
-    // 상태 변수(예시)
-    let leaderCount = 10;
-    let approveWaiting = 1;
-    let logs = [
-      "리더 리마 10개 자동 생성 완료",
-      "11번째 리더 리마 승인 요청(지문 인증)",
-      "승인 대기중..."
-    ];
-    let chatlog = [
-      "[알림] 리더 리마 10개 초과 승인 필요",
-      "[상황] 관리자 승인/거부 모두 기록됨"
-    ];
-    function openModal(type) {
-      let html = "";
-      if(type==="create") {
-        html = `
-        <h2 class="text-xl font-bold mb-2 text-indigo-700">🪄 리마 생성/관리</h2>
-        <p class="mb-4 text-gray-700">여기서 리마를 무한 생성/삭제/상태 관리 가능합니다.</p>
-        <button class="w-full py-2 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 mb-2" onclick="alert('새 리마 생성! (실제 기능 연동 필요)')">새 리마 생성</button>
-        <button class="w-full py-2 bg-indigo-50 text-indigo-600 font-semibold rounded-xl border border-indigo-200 hover:bg-indigo-100" onclick="alert('리마 전체 상태 보기 (실제 연동 필요)')">상세 보기</button>
-        `;
-      }
-      if(type==="leader") {
-        html = `
-        <h2 class="text-xl font-bold mb-2 text-indigo-700">🛡️ 리더 리마 승인</h2>
-        <p class="mb-3 text-gray-700">10개 초과시 지문인증 승인만 가능합니다.</p>
-        <div class="mb-4">
-          <span class="font-semibold text-gray-700">현재 리더 리마:</span> ${leaderCount}개 <br>
-          <span class="font-semibold text-gray-700">승인 대기:</span> ${approveWaiting}건
+from flask import Flask, render_template_string, request, jsonify
+import concurrent.futures
+import threading
+import time
+
+app = Flask(__name__)
+
+# ----- 리마/상황판 상태 -----
+TOTAL_RIMA = 10    # 100000으로 확장 가능
+languages = ['en','zh','ja','vi','es']
+success = 0
+fail = 0
+lock = threading.Lock()
+logs = []
+
+# ----- 리마 실행 함수 -----
+def rima_job(idx):
+    global success, fail, logs
+    lang = languages[idx % len(languages)]
+    msg = f"[RIMA-{idx}] {lang} 업로드 준비..."
+    with lock: logs.append(msg)
+    try:
+        # 여기에 실제 유튜브 업로드 자동화(또는 시뮬레이션) 코드 삽입
+        time.sleep(0.1)
+        msg2 = f"[RIMA-{idx}] {lang} 업로드 성공!"
+        with lock:
+            success += 1
+            logs.append(msg2)
+    except Exception as e:
+        msg2 = f"[RIMA-{idx}] 실패: {str(e)}"
+        with lock:
+            fail += 1
+            logs.append(msg2)
+
+# ----- API/웹서버 -----
+@app.route('/')
+def index():
+    # HTML(상황판/채팅) 직접 렌더링
+    html = '''
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+      <meta charset="UTF-8">
+      <title>리마 상황판/채팅</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-slate-100 min-h-screen">
+      <div class="max-w-xl mx-auto p-4">
+        <h2 class="text-2xl font-bold mb-4 text-indigo-700">리마 상황판/채팅</h2>
+        <div id="status" class="bg-white rounded-xl shadow p-3 mb-3 text-indigo-900"></div>
+        <div id="chat" class="bg-slate-50 rounded-xl shadow p-3 mb-2 h-64 overflow-y-auto text-sm"></div>
+        <div class="flex gap-2">
+          <input id="msg" class="flex-1 border rounded p-2" placeholder="메시지/명령 입력"/>
+          <button onclick="sendMsg()" class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-semibold">전송</button>
+          <button onclick="runRima()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold ml-1">리마 실행</button>
         </div>
-        <button class="w-full py-2 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 mb-3" onclick="fingerApprove()">지문인증 승인하기</button>
-        <div class="text-sm text-gray-400">* 실제 연동은 WebAuthn/모바일 생체인증 필요</div>
-        `;
-      }
-      if(type==="log") {
-        html = `
-        <h2 class="text-xl font-bold mb-2 text-indigo-700">📊 상황판/로그</h2>
-        <ul class="list-disc ml-4 mb-2">
-          ${logs.map(l=>`<li class="text-gray-700 mb-1">${l}</li>`).join("")}
-        </ul>
-        <button class="w-full py-2 bg-indigo-50 text-indigo-600 font-semibold rounded-xl border border-indigo-200 hover:bg-indigo-100" onclick="alert('전체 로그 다운로드 (구현 필요)')">전체 로그 다운로드</button>
-        `;
-      }
-      if(type==="chat") {
-        html = `
-        <h2 class="text-xl font-bold mb-2 text-indigo-700">💬 채팅/알림/보고</h2>
-        <div class="mb-2 text-gray-700">명령, 승인, 시스템 상태, 알림 등 실시간 대화 지원</div>
-        <div class="bg-slate-100 rounded p-3 mb-3 h-28 overflow-y-auto">
-          ${chatlog.map(m=>`<div>${m}</div>`).join("")}
-        </div>
-        <textarea class="w-full rounded p-2 border mb-2" placeholder="GPT+리마에게 명령 입력"></textarea>
-        <button class="w-full py-2 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700">명령 전송</button>
-        `;
-      }
-      document.getElementById('modalContent').innerHTML = html;
-      document.getElementById('modalBG').classList.remove('hidden');
-    }
-    function closeModal() { document.getElementById('modalBG').classList.add('hidden'); }
-    function fingerApprove() {
-      // 실제 지문인증 연동 필요. 여기서는 시뮬레이션.
-      let ok = confirm("지문 인증 성공 처리 (실제는 WebAuthn/FaceID 연동)");
-      if(ok) {
-        leaderCount++;
-        approveWaiting = Math.max(0, approveWaiting-1);
-        logs.unshift(`지문 인증 승인, 리더 리마 ${leaderCount}개`);
-        chatlog.unshift(`[알림] ${leaderCount}번째 리더 리마 승인!`);
-        document.getElementById('mainStatus').innerText = `현재 리더 리마: ${leaderCount}개 | 승인대기: ${approveWaiting}건`;
-        closeModal();
-        alert('승인 완료! 상황판에 즉시 반영됩니다.');
-      } else {
-        logs.unshift('지문 인증 거부됨!');
-        closeModal();
-      }
-    }
-  </script>
-</body>
-</html>
+      </div>
+      <script>
+        async function update() {
+          let res = await fetch('/status'); let j = await res.json();
+          document.getElementById('status').innerHTML =
+            `리마: ${j.total}개<br>성공: ${j.success} / 실패: ${j.fail} / 진행률: ${j.progress}`;
+          document.getElementById('chat').innerHTML =
+            j.logs.slice(-30).map(m=>"<div>"+m+"</div>").join('');
+          document.getElementById('chat').scrollTop = 99999;
+        }
+        async function sendMsg() {
+          let m = document.getElementById('msg').value;
+          if(!m) return;
+          await fetch('/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({'msg': m})});
+          document.getElementById('msg').value = '';
+          update();
+        }
+        async function runRima() {
+          await fetch('/run', {method:'POST'});
+          setTimeout(update, 500);
+        }
+        setInterval(update, 1200);
+        update();
+      </script>
+    </body>
+    </html>
+    '''
+    return render_template_string(html)
+
+@app.route('/status')
+def status():
+    global success, fail, logs
+    prog = f"{(success+fail)/TOTAL_RIMA*100:.2f}%" if TOTAL_RIMA>0 else "0%"
+    return jsonify({'total': TOTAL_RIMA, 'success': success, 'fail': fail, 'progress': prog, 'logs': logs})
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    global logs
+    data = request.json
+    logs.append(f"<b>나:</b> {data['msg']}")
+    return jsonify({'result':'ok'})
+
+@app.route('/run', methods=['POST'])
+def run():
+    global success, fail, logs
+    # 상태 리셋
+    success = 0; fail = 0; logs.clear()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        executor.map(rima_job, range(1, TOTAL_RIMA+1))
+    logs.append("전체 리마 실행 완료!")
+    return jsonify({'result':'ok'})
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8080)
