@@ -2,95 +2,52 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rima YouTube Scheduler</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>리마 유튜브 자동업로드 웹앱</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    body { font-family: sans-serif; margin:2em; background:#f8f8ff;}
+    .box { max-width:400px; margin:auto; padding:2em; background:white; border-radius:18px; box-shadow:0 3px 10px #bbb;}
+    label { display:block; margin:1em 0 0.5em;}
+    input, textarea, button { width:100%; padding:0.6em; border-radius:8px; margin-bottom:1em; }
+    #log {background:#e7f3ff; padding:1em; border-radius:10px; min-height:40px;}
+  </style>
 </head>
-<body class="flex flex-col h-screen bg-gray-50">
-  <!-- 헤더 -->
-  <header class="flex items-center justify-between bg-white shadow px-6 py-3">
-    <h1 class="text-2xl font-bold">Rima YouTube Scheduler</h1>
-    <nav>
-      <button class="text-sm px-4 py-2 hover:bg-gray-100 rounded">설정</button>
-      <button class="text-sm px-4 py-2 hover:bg-gray-100 rounded">로그아웃</button>
-    </nav>
-  </header>
-
-  <!-- 컨텐츠: 2열 레이아웃 -->
-  <div class="flex-1 flex overflow-hidden">
-    <!-- 왼쪽: YouTube Studio 링크 -->
-    <section class="flex-1 p-4 flex flex-col justify-center items-center">
-      <div class="w-full max-w-sm bg-white rounded-xl shadow p-6 flex flex-col items-center">
-        <h2 class="text-lg font-medium mb-4">YouTube 스튜디오</h2>
-        <a href="https://studio.youtube.com/channel/UC/upload" target="_blank"
-           class="w-full text-center bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600">
-          스튜디오 열기
-        </a>
-      </div>
-    </section>
-
-    <!-- 오른쪽: 탭형 사이드바 -->
-    <aside class="w-96 bg-white shadow p-4 flex flex-col">
-      <!-- 탭 메뉴 -->
-      <div class="flex mb-4">
-        <button id="tab-chat" class="flex-1 py-2 text-center font-medium border-b-2 border-indigo-500">채팅</button>
-        <button id="tab-status" class="flex-1 py-2 text-center font-medium border-b-2 border-transparent hover:border-gray-300">진행률</button>
-      </div>
-
-      <!-- 채팅 콘텐츠 -->
-      <div id="content-chat" class="flex-1 flex flex-col">
-        <div id="chat" class="flex-1 overflow-y-auto space-y-2 px-2"></div>
-        <div class="mt-2 flex">
-          <input id="input" type="text" placeholder="메시지 입력..." class="flex-1 border rounded-l px-2 py-1 focus:outline-none" />
-          <button id="send" class="bg-indigo-500 text-white px-4 rounded-r hover:bg-indigo-600">전송</button>
-        </div>
-      </div>
-
-      <!-- 진행률 콘텐츠 -->
-      <div id="content-status" class="hidden flex flex-col">
-        <ul class="flex-1 overflow-y-auto space-y-2 text-gray-800 px-2">
-          <li>🟡 업로드 상태: 대기 중</li>
-          <li>🔵 학습 과제: 메타데이터 최적화</li>
-          <li>✅ 마지막 성공률: 95%</li>
-          <li>⏰ 다음 업데이트: 자정</li>
-        </ul>
-        <button onclick="location.reload()" class="mt-2 bg-indigo-500 text-white py-2 rounded hover:bg-indigo-600">새로고침</button>
-      </div>
-    </aside>
+<body>
+  <div class="box">
+    <h2>리마 유튜브 자동업로드</h2>
+    <label>동영상 파일</label>
+    <input type="file" id="file" accept="video/*"/>
+    <label>제목</label>
+    <input type="text" id="title"/>
+    <label>설명</label>
+    <textarea id="desc"></textarea>
+    <label>태그 (쉼표 구분)</label>
+    <input type="text" id="tags"/>
+    <label>예약시간</label>
+    <input type="datetime-local" id="schedule"/>
+    <button onclick="startUpload()">업로드 시작</button>
+    <div id="log">진행 현황/결과 표시</div>
+    <hr/>
+    <h3>GPT+리마 채팅/명령</h3>
+    <textarea id="chat" placeholder="명령어, 질문 등 입력"></textarea>
+    <button onclick="sendChat()">전송</button>
+    <div id="chatlog"></div>
   </div>
-
-  <!-- 스크립트 -->
   <script>
-    // 탭 전환
-    const tabChat = document.getElementById('tab-chat');
-    const tabStatus = document.getElementById('tab-status');
-    const contentChat = document.getElementById('content-chat');
-    const contentStatus = document.getElementById('content-status');
-    tabChat.addEventListener('click', () => {
-      tabChat.classList.add('border-indigo-500'); tabStatus.classList.remove('border-indigo-500');
-      contentChat.classList.remove('hidden'); contentStatus.classList.add('hidden');
-    });
-    tabStatus.addEventListener('click', () => {
-      tabStatus.classList.add('border-indigo-500'); tabChat.classList.remove('border-indigo-500');
-      contentStatus.classList.remove('hidden'); contentChat.classList.add('hidden');
-    });
-
-    // 채팅 로직
-    const chat = document.getElementById('chat');
-    const input = document.getElementById('input');
-    const send = document.getElementById('send');
-    send.addEventListener('click', sendMsg);
-    input.addEventListener('keydown', e => e.key === 'Enter' && sendMsg());
-    function sendMsg() {
-      const txt = input.value.trim(); if(!txt) return;
-      append(txt,'user'); input.value='';
-      setTimeout(() => append(`\"${txt}\" 처리 중... 🎯`,'rima'), 500);
+    function startUpload() {
+      document.getElementById('log').innerText = "업로드 준비중(시연용)...";
+      setTimeout(()=> {
+        document.getElementById('log').innerText = "자동 업로드 완료! (예시)\n[유튜브 링크: https://youtu.be/xxxxxx]";
+      }, 2000);
     }
-    function append(text, who){
-      const div = document.createElement('div');
-      div.className = who==='user'?'text-right':'text-left';
-      div.innerHTML = `<span class='inline-block p-2 rounded-lg ${who==='user'?'bg-indigo-200':'bg-green-200'}'>${text}</span>`;
-      chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
+    function sendChat() {
+      const val = document.getElementById('chat').value;
+      document.getElementById('chatlog').innerHTML += "<div><b>나:</b> " + val + "</div>";
+      document.getElementById('chat').value = "";
+      setTimeout(()=> {
+        document.getElementById('chatlog').innerHTML += "<div><b>GPT+리마:</b> 명령이 정상적으로 처리되었습니다.</div>";
+      }, 1000);
     }
   </script>
 </body>
