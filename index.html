@@ -52,8 +52,11 @@
       document.getElementById('log').innerText = 
         `채널명: ${channel}\n스튜디오 링크: ${studioLink}\n업로드 준비중(시연용)...`;
       setTimeout(()=> {
-        document.getElementById('log').innerText = 
-          `업로드 완료! (예시)\n[유튜브 링크: https://youtu.be/xxxxxx]\n채널명: ${channel}\n스튜디오 바로가기: ${studioLink}`;
+        document.getElementById('log').innerHTML = 
+          `업로드 완료! (예시)<br>
+          [유튜브 링크: <a href="https://youtu.be/xxxxxx" target="_blank">바로가기</a>]<br>
+          채널명: ${channel}<br>
+          스튜디오 바로가기: <a href="${studioLink}" target="_blank">[클릭]</a>`;
       }, 2000);
     }
     function sendChat() {
