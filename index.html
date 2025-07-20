@@ -1,123 +1,99 @@
-/*
-프로젝트 구조:
+<!-- index.html: 하나의 파일로 열기만 해도 동작하는 탈중앙 웹앱 UI -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rima YouTube 예약 업로드</title>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="h-screen grid grid-cols-3 gap-4 p-4 bg-gray-100">
 
-rima-youtube-app/
-├── index.html
-├── package.json
-└── src/
-    ├── main.jsx
-    ├── App.jsx
-    └── index.css
-*/
+  <!-- YouTube Studio 영역 -->
+  <div class="col-span-2 bg-white rounded-2xl shadow p-4 flex flex-col">
+    <h2 class="text-2xl font-bold mb-4">YouTube 스튜디오</h2>
+    <iframe
+      src="https://studio.youtube.com/channel/UC/upload"
+      title="YouTube Studio"
+      class="flex-1 w-full rounded-lg border"
+      allow="autoplay; fullscreen"
+    ></iframe>
+  </div>
 
-// src/main.jsx
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import './index.css';  // Tailwind 스타일 로드
-
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
-
-// src/index.css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-// src/App.jsx
-import React, { useState, useEffect, useRef } from 'react';
-
-export default function App() {
-  const [messages, setMessages] = useState([
-    { from: 'system', text: '안녕하세요! Rima 에이전트를 통해 유튜브 예약 업로드를 실행할 수 있습니다.' }
-  ]);
-  const [input, setInput] = useState('');
-  const messagesEndRef = useRef(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const handleSend = () => {
-    if (!input.trim()) return;
-    setMessages(prev => [...prev, { from: 'user', text: input }]);
-    setTimeout(() => {
-      setMessages(prev => [...prev, { from: 'rima', text: `"${input}" 명령을 수행 중입니다... ✅` }]);
-    }, 800);
-    setInput('');
-  };
-
-  return (
-    <div className="h-screen grid grid-cols-3 gap-4 p-4 bg-gray-100">
-      {/* YouTube Studio 영역 */}
-      <div className="col-span-2 bg-white rounded-2xl shadow p-4 flex flex-col">
-        <h2 className="text-2xl font-bold mb-4">YouTube 스튜디오</h2>
-        <iframe
-          src="https://studio.youtube.com/channel/UC/upload"
-          title="YouTube Studio"
-          className="flex-1 w-full rounded-lg border"
-          allow="autoplay; fullscreen"
-        />
+  <!-- 채팅 & 대시보드 -->
+  <div class="flex flex-col space-y-4">
+    <!-- 채팅창 -->
+    <div class="flex-1 bg-white rounded-2xl shadow p-4 flex flex-col">
+      <h2 class="text-xl font-semibold mb-2">GPT ↔ Rima 채팅</h2>
+      <div id="chat" class="flex-1 bg-gray-50 rounded-lg p-3 overflow-y-auto space-y-2">
+        <!-- 예시 메시지 -->
+        <div class="flex justify-start">
+          <div class="bg-green-200 text-green-900 px-3 py-2 rounded-lg max-w-xs break-words">
+            안녕하세요! Rima 에이전트를 통해 유튜브 예약 업로드를 실행할 수 있습니다.
+          </div>
+        </div>
       </div>
-
-      {/* 채팅 & 대시보드 */}
-      <div className="flex flex-col space-y-4">
-        <div className="flex-1 bg-white rounded-2xl shadow p-4 flex flex-col">
-          <h2 className="text-xl font-semibold mb-2">GPT ↔ Rima 채팅</h2>
-          <div className="flex-1 bg-gray-50 rounded-lg p-3 overflow-y-auto">
-            {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`mb-2 flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`px-3 py-2 rounded-lg max-w-xs break-words
-                    ${msg.from === 'user' ? 'bg-blue-200 text-blue-900' : 'bg-green-200 text-green-900'}`
-                }
-                >
-                  {msg.text}
-                </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-          <div className="mt-3 flex">
-            <input
-              type="text"
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSend()}
-              placeholder="메시지를 입력하세요..."
-              className="flex-1 border rounded-l-lg p-2 focus:outline-none"
-            />
-            <button
-              onClick={handleSend}
-              className="bg-blue-500 text-white rounded-r-lg px-4 py-2 hover:bg-blue-600"
-            >
-              전송
-            </button>
-          </div>
-        </div>
-
-        <div className="h-60 bg-white rounded-2xl shadow p-4 flex flex-col">
-          <h2 className="text-xl font-semibold mb-3">진행률 대시보드</h2>
-          <ul className="flex-1 overflow-y-auto space-y-2 text-gray-700">
-            <li>📌 <strong>업로드 상태:</strong> 대기 중</li>
-            <li>📌 <strong>학습 과제:</strong> 메타데이터 최적화</li>
-            <li>📌 <strong>지난 성공률:</strong> 95%</li>
-            <li>📌 <strong>다음 업데이트:</strong> 자정</li>
-          </ul>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-3 bg-indigo-500 text-white rounded-lg p-2 hover:bg-indigo-600"
-          >
-            새로고침
-          </button>
-        </div>
+      <div class="mt-3 flex">
+        <input id="input" type="text" placeholder="메시지를 입력하세요..."
+               class="flex-1 border rounded-l-lg p-2 focus:outline-none" />
+        <button id="send" class="bg-blue-500 text-white rounded-r-lg px-4 py-2 hover:bg-blue-600">
+          전송
+        </button>
       </div>
     </div>
-  );
-}
+
+    <!-- 진행률 대시보드 -->
+    <div class="h-60 bg-white rounded-2xl shadow p-4 flex flex-col">
+      <h2 class="text-xl font-semibold mb-3">진행률 대시보드</h2>
+      <ul id="status" class="flex-1 overflow-y-auto space-y-2 text-gray-700">
+        <li>📌 <strong>업로드 상태:</strong> 대기 중</li>
+        <li>📌 <strong>학습 과제:</strong> 메타데이터 최적화</li>
+        <li>📌 <strong>지난 성공률:</strong> 95%</li>
+        <li>📌 <strong>다음 업데이트:</strong> 자정</li>
+      </ul>
+      <button onclick="location.reload()"
+              class="mt-3 bg-indigo-500 text-white rounded-lg p-2 hover:bg-indigo-600">
+        새로고침
+      </button>
+    </div>
+  </div>
+
+  <!-- 간단한 채팅 스크립트 -->
+  <script>
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('input');
+    const send = document.getElementById('send');
+
+    send.addEventListener('click', () => handleSend());
+    input.addEventListener('keydown', e => e.key === 'Enter' && handleSend());
+
+    function handleSend() {
+      const text = input.value.trim();
+      if (!text) return;
+      appendMessage(text, 'user');
+      input.value = '';
+      // 모킹된 Rima 응답
+      setTimeout(() => {
+        appendMessage(`"${text}" 명령을 수행 중입니다... ✅`, 'rima');
+      }, 500);
+    }
+
+    function appendMessage(text, from) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'mb-2 flex ' + (from === 'user' ? 'justify-end' : 'justify-start');
+      const bubble = document.createElement('div');
+      bubble.className =
+        'px-3 py-2 rounded-lg max-w-xs break-words ' +
+        (from === 'user'
+          ? 'bg-blue-200 text-blue-900'
+          : 'bg-green-200 text-green-900');
+      bubble.textContent = text;
+      wrapper.appendChild(bubble);
+      chat.appendChild(wrapper);
+      chat.scrollTop = chat.scrollHeight;
+    }
+  </script>
+
+</body>
+</html>
