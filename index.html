@@ -1,171 +1,77 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <title>리마 유튜브 자동화 시뮬레이터 - 완전 통합본</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f4f7fa; color: #222; margin:0; padding:2em;}
-    .container { max-width:600px; margin:auto; background:#fff; border-radius:16px; box-shadow:0 2px 16px #0001; padding:2em;}
-    h1 { color:#1976d2; margin-bottom:0.5em; }
-    label { margin-top:1em; display:block; }
-    input[type="text"], textarea, input[type="datetime-local"] {
-      width:100%; padding:0.7em; border-radius:8px; border:1px solid #bbb; margin-top:0.3em; margin-bottom:1em;
-      font-size:1em;
-    }
-    input[type="file"] { margin-top:0.6em; margin-bottom:1em; }
-    button {
-      padding:0.8em 1.5em; margin:0.3em 0.5em 0.7em 0; font-size:1em;
-      background:#1976d2; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;
-      transition:background 0.15s;
-    }
-    button:hover { background:#0f519b; }
-    #status, #response {
-      margin-top:1.2em; padding:1em; background:#f7fbff; border-radius:8px; border:1px solid #dde;
-      min-height:2em; font-size:1em; word-break:break-all;
-    }
-    #videoList li { margin-bottom:0.7em; background:#f1f1f5; padding:0.7em; border-radius:6px;}
-    .btn-row { margin-bottom:1.2em;}
-    .bold { font-weight:bold; color:#1976d2;}
-    .mini { font-size:0.96em; color:#666;}
-    .log-block { background:#fafbfc; padding:0.5em; border-radius:6px; margin-top:0.5em; border:1px solid #e2e2ef;}
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>🎬 리마 유튜브 자동화 시뮬레이터</h1>
-    <div class="btn-row">
-      <button onclick="clearInputs()">입력값 초기화</button>
-      <button onclick="clearLog()">명령 기록 초기화</button>
-      <button onclick="showRimaMemory()">🧠 리마 명령 기록</button>
-    </div>
-    <label for="videoTitle">📝 영상 제목</label>
-    <input type="text" id="videoTitle" placeholder="예: 리마 자동화 테스트 영상" />
-    <label for="videoDesc">📄 영상 설명</label>
-    <textarea id="videoDesc" rows="2" placeholder="영상 설명 입력..."></textarea>
-    <label for="videoThumb">🖼️ 썸네일 파일명</label>
-    <input type="text" id="videoThumb" placeholder="예: thumb001.jpg (예시)" />
-    <label for="videoTime">🕐 예약 업로드 시간</label>
-    <input type="datetime-local" id="videoTime" />
-    <div class="btn-row">
-      <button onclick="simulateUpload()">📤 업로드</button>
-      <button onclick="simulateSchedule()">⏰ 예약 업로드</button>
-      <button onclick="simulateAutoRepeat()">🔁 반복 업로드</button>
-    </div>
-    <div id="status"></div>
-    <div id="response"></div>
-    <h3>📺 업로드 영상 리스트</h3>
-    <ul id="videoList"></ul>
-    <div class="log-block">
-      <div class="bold">💬 GPT↔리마 채팅 명령</div>
-      <input type="text" id="chatInput" placeholder="GPT → 리마에게 명령 입력..." style="width:65%;padding:0.5em;border-radius:6px;">
-      <button onclick="sendToRIMA()" style="padding:0.5em;">보내기</button>
-      <div id="chat-log" style="background:#222; color:#eee; margin-top:0.7em; min-height:60px; border-radius:6px; padding:0.7em; font-family:monospace; font-size:15px; max-height:150px; overflow-y:auto;"></div>
-    </div>
-  </div>
-  <script>
-    const RIMA = {
-      memory: [],
-      uploadedVideos: [],
-      receiveCommand: function(command) {
-        this.memory.push({
-          time: new Date().toLocaleString(),
-          command: command,
-          result: "성공 (시뮬레이션)"
-        });
-        // 자동 업로드
-        if(command.startsWith("업로드:")) {
-          const parts = command.split(",");
-          const title = (parts[0]||"").replace("업로드:","").trim();
-          const desc = (parts[1]||"").replace("설명:","").trim();
-          const thumb = (parts[2]||"").replace("썸네일:","").trim();
-          const time = (parts[3]||"").replace("예약:","").trim();
-          const videoData = {
-            title, desc, thumb, time,
-            timestamp: new Date().toLocaleString()
-          };
-          this.uploadedVideos.push(videoData);
-          this.renderUpload(videoData);
-          return `🎬 영상 "${title}" 업로드 완료 (${time ? "예약: "+time : "즉시 업로드"})`;
-        }
-        return `🧠 리마가 명령을 기억했습니다: "${command}"`;
-      },
-      renderUpload: function(video) {
-        const videoList = document.getElementById("videoList");
-        const item = document.createElement("li");
-        item.innerHTML = `✅ <strong>${video.title}</strong> <span class="mini">| 🕒 ${video.timestamp} ${video.time? "| 예약: "+video.time:""}</span><br>
-          📄 ${video.desc||"설명 없음"}<br>🖼️ <em>${video.thumb||"썸네일 없음"}</em>`;
-        videoList.prepend(item);
-      },
-      getMemory: function() {
-        return this.memory.map(
-          (item, i) => `${i+1}. [${item.time}] ${item.command} → ${item.result}`
-        ).join("\n");
-      }
-    };
+// upload.js
+// 1) npm init -y
+// 2) npm install puppeteer dotenv
+// 3) .env 파일에 YT_EMAIL, YT_PASSWORD, VIDEO_PATH, VIDEO_TITLE, VIDEO_DESC, SCHEDULE_DATETIME 세팅
 
-    function clearInputs() {
-      document.getElementById("videoTitle").value = "";
-      document.getElementById("videoDesc").value = "";
-      document.getElementById("videoThumb").value = "";
-      document.getElementById("videoTime").value = "";
-      document.getElementById("status").innerText = "입력값 초기화 완료!";
-    }
-    function clearLog() {
-      RIMA.memory = [];
-      RIMA.uploadedVideos = [];
-      document.getElementById("videoList").innerHTML = "";
-      document.getElementById("response").innerText = "기록 초기화 완료!";
-    }
-    function simulateUpload() {
-      const title = document.getElementById("videoTitle").value.trim();
-      const desc = document.getElementById("videoDesc").value.trim();
-      const thumb = document.getElementById("videoThumb").value.trim();
-      if(!title) { document.getElementById("status").innerText = "❗ 영상 제목은 필수!"; return; }
-      const cmd = `업로드:${title}, 설명:${desc}, 썸네일:${thumb}, 예약:`;
-      const res = RIMA.receiveCommand(cmd);
-      document.getElementById("status").innerText = res;
-      document.getElementById("response").innerText = "즉시 업로드 완료!";
-    }
-    function simulateSchedule() {
-      const title = document.getElementById("videoTitle").value.trim();
-      const desc = document.getElementById("videoDesc").value.trim();
-      const thumb = document.getElementById("videoThumb").value.trim();
-      const time = document.getElementById("videoTime").value;
-      if(!title||!time) { document.getElementById("status").innerText = "❗ 제목/예약시간 필수!"; return; }
-      const cmd = `업로드:${title}, 설명:${desc}, 썸네일:${thumb}, 예약:${time}`;
-      const res = RIMA.receiveCommand(cmd);
-      document.getElementById("status").innerText = res;
-      document.getElementById("response").innerText = "예약 업로드 완료!";
-    }
-    function simulateAutoRepeat() {
-      const title = document.getElementById("videoTitle").value.trim();
-      const desc = document.getElementById("videoDesc").value.trim();
-      const thumb = document.getElementById("videoThumb").value.trim();
-      if(!title) { document.getElementById("status").innerText = "❗ 영상 제목은 필수!"; return; }
-      let msg = "";
-      for(let i=1; i<=3; ++i) {
-        const t = `${title}_${i}`;
-        const cmd = `업로드:${t}, 설명:${desc}, 썸네일:${thumb}, 예약:`;
-        msg += RIMA.receiveCommand(cmd)+"\n";
-      }
-      document.getElementById("status").innerText = "🔁 반복 업로드 3회 실행 완료!";
-      document.getElementById("response").innerText = msg;
-    }
-    function showRimaMemory() {
-      document.getElementById("response").innerHTML = "<pre>"+RIMA.getMemory()+"</pre>";
-    }
-    // 채팅 명령
-    function sendToRIMA() {
-      const input = document.getElementById("chatInput");
-      const chatLog = document.getElementById("chat-log");
-      const userCommand = input.value.trim();
-      if (!userCommand) return;
-      chatLog.innerHTML += `<div style="color:#0f0;">GPT: ${userCommand}</div>`;
-      const response = RIMA.receiveCommand(userCommand);
-      chatLog.innerHTML += `<div style="color:#0ff;">RIMA: ${response}</div><br>`;
-      input.value = "";
-      chatLog.scrollTop = chatLog.scrollHeight;
-    }
-  </script>
-</body>
-</html>
+require('dotenv').config();
+const puppeteer = require('puppeteer');
+
+(async () => {
+  const {
+    YT_EMAIL,
+    YT_PASSWORD,
+    VIDEO_PATH,
+    VIDEO_TITLE,
+    VIDEO_DESC,
+    SCHEDULE_DATETIME // 형식: 'YYYY-MM-DDTHH:mm' 예: '2025-07-25T15:30'
+  } = process.env;
+
+  const browser = await puppeteer.launch({
+    headless: false,        // 업로드 과정을 눈으로 확인하려면 false
+    defaultViewport: null,
+    args: ['--no-sandbox','--disable-setuid-sandbox']
+  });
+  const page = await browser.newPage();
+
+  // 1. YouTube 로그인
+  await page.goto('https://accounts.google.com/ServiceLogin');
+  await page.type('input[type="email"]', YT_EMAIL, {delay: 50});
+  await page.click('#identifierNext');
+  await page.waitForTimeout(2000);
+  await page.type('input[type="password"]', YT_PASSWORD, {delay: 50});
+  await page.click('#passwordNext');
+  await page.waitForNavigation({waitUntil: 'networkidle2'});
+
+  // 2. YouTube Studio 업로드 페이지로 이동
+  await page.goto('https://studio.youtube.com/channel/UC/upload', {waitUntil: 'networkidle2'});
+
+  // 3. 파일 선택
+  const [fileChooser] = await Promise.all([
+    page.waitForFileChooser(),
+    page.click('input[type="file"]')
+  ]);
+  await fileChooser.accept([VIDEO_PATH]);
+
+  // 4. 메타데이터 입력
+  await page.waitForSelector('#textbox', {visible: true});
+  // 제목
+  const titleBox = (await page.$$('#textbox'))[0];
+  await titleBox.click({clickCount: 3});
+  await titleBox.type(VIDEO_TITLE);
+  // 설명
+  const descBox = (await page.$$('#textbox'))[1];
+  await descBox.click();
+  await descBox.type(VIDEO_DESC);
+
+  // 5. 예약 업로드 설정
+  // '다음' 버튼 3회
+  for (let i=0; i<3; i++) {
+    await page.click('ytcp-button#next-button');
+    await page.waitForTimeout(1000);
+  }
+  // 공개 설정에서 '예약' 선택
+  await page.click('tp-yt-paper-radio-button[name="SCHEDULE"]');
+  // 날짜/시간 입력
+  await page.evaluate((dt) => {
+    const [date, time] = dt.split('T');
+    document.querySelector('input#date-input').value = date;
+    document.querySelector('input#time-input').value = time;
+  }, SCHEDULE_DATETIME);
+
+  // '예약' 버튼 클릭
+  await page.click('ytcp-button#done-button');
+  await page.waitForTimeout(2000);
+
+  console.log('✅ 예약 업로드 완료:', VIDEO_PATH, '→', SCHEDULE_DATETIME');
+  await browser.close();
+})();
