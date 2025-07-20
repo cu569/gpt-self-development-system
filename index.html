@@ -1,4 +1,32 @@
+/*
+설치 및 실행 방법:
+1. 프로젝트 생성 (Vite):
+   npm create vite@latest rima-youtube-app --template react
+2. 프로젝트 디렉토리로 이동:
+   cd rima-youtube-app
+3. Tailwind CSS 설치 및 설정:
+   npm install -D tailwindcss postcss autoprefixer
+   npx tailwindcss init -p
+   // tailwind.config.js 에서 content 경로를 아래와 같이 설정
+   module.exports = {
+     content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
+     theme: { extend: {} },
+     plugins: [],
+   };
+   // src/index.css 파일에 추가
+   @tailwind base;
+   @tailwind components;
+   @tailwind utilities;
+4. 필수 패키지 설치:
+   npm install react-router-dom
+5. src/App.jsx 파일을 아래 코드로 교체
+6. 개발 서버 실행:
+   npm run dev
+7. 브라우저에서 http://localhost:5173 접속 후 UI 확인
+*/
+
 import React, { useState, useEffect, useRef } from 'react';
+import './index.css'; // Tailwind CSS 스타일 로드
 
 export default function App() {
   // 채팅 상태
