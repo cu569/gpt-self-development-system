@@ -1,46 +1,96 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 export default function App() {
+  // 채팅 상태
+  const [messages, setMessages] = useState([
+    { from: 'system', text: '안녕하세요! Rima 에이전트를 통해 유튜브 예약 업로드를 실행할 수 있습니다.' }
+  ]);
+  const [input, setInput] = useState('');
+  const messagesEndRef = useRef(null);
+
+  // 새 메시지 추가 시 스크롤
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    setMessages(prev => [...prev, { from: 'user', text: input }]);
+    // GPT/Rima 응답 모킹
+    setTimeout(() => {
+      setMessages(prev => [...prev, { from: 'rima', text: `"${input}" 명령을 수행 중입니다... ✅` }]);
+    }, 800);
+    setInput('');
+  };
+
   return (
-    <div className="h-screen grid grid-cols-3 gap-2 p-2">
-      {/* YouTube Studio View */}
-      <div className="col-span-2 rounded-2xl shadow p-2 overflow-hidden">
-        <h2 className="text-xl font-semibold mb-2">YouTube Studio</h2>
+    <div className="h-screen grid grid-cols-3 gap-4 p-4 bg-gray-100">
+      {/* 왼쪽: YouTube Studio */}
+      <div className="col-span-2 bg-white rounded-2xl shadow p-4 flex flex-col">
+        <h2 className="text-2xl font-bold mb-4">YouTube 스튜디오</h2>
         <iframe
           src="https://studio.youtube.com/channel/UC/upload"
-          className="w-full h-full rounded-lg border"
+          title="YouTube Studio"
+          className="flex-1 w-full rounded-lg border"
           allow="autoplay; fullscreen"
         />
       </div>
 
-      {/* Right Sidebar: Chat + Progress */}
-      <div className="flex flex-col space-y-2">
-        {/* Chat Window */}
-        <div className="flex-1 rounded-2xl shadow p-2 flex flex-col">
-          <h2 className="text-lg font-semibold mb-1">GPT ↔ Rima Chat</h2>
-          <div className="flex-1 bg-gray-50 rounded-lg p-2 overflow-y-auto">
-            {/* Chat messages will render here */}
+      {/* 오른쪽: 채팅창 및 진행률 */}
+      <div className="flex flex-col space-y-4">
+        {/* 채팅창 */}
+        <div className="flex-1 bg-white rounded-2xl shadow p-4 flex flex-col">
+          <h2 className="text-xl font-semibold mb-2">GPT ↔ Rima 채팅</h2>
+          <div className="flex-1 bg-gray-50 rounded-lg p-3 overflow-y-auto">
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`mb-2 flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`px-3 py-2 rounded-lg max-w-xs break-words
+                    ${msg.from === 'user' ? 'bg-blue-200 text-blue-900' : 'bg-green-200 text-green-900'}`
+                }
+                >
+                  {msg.text}
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
           </div>
-          <div className="mt-2 flex">
+          <div className="mt-3 flex">
             <input
               type="text"
-              placeholder="메시지 입력..."
-              className="flex-1 rounded-l-lg border p-2 focus:outline-none"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSend()}
+              placeholder="메시지를 입력하세요..."
+              className="flex-1 border rounded-l-lg p-2 focus:outline-none"
             />
-            <button className="rounded-r-lg border px-4 py-2">전송</button>
+            <button
+              onClick={handleSend}
+              className="bg-blue-500 text-white rounded-r-lg px-4 py-2 hover:bg-blue-600"
+            >
+              전송
+            </button>
           </div>
         </div>
 
-        {/* Progress Dashboard */}
-        <div className="h-48 rounded-2xl shadow p-2 bg-white flex flex-col">
-          <h2 className="text-lg font-semibold mb-1">진행률 대시보드</h2>
-          <ul className="space-y-1 overflow-y-auto flex-1">
-            <li>📈 업로드: 대기 중</li>
-            <li>📚 학습 과제: 메타데이터 최적화</li>
-            <li>✅ 지난 업로드 성공률: 95%</li>
-            <li>🕒 다음 업데이트: 자정</li>
+        {/* 진행률 대시보드 */}
+        <div className="h-60 bg-white rounded-2xl shadow p-4 flex flex-col">
+          <h2 className="text-xl font-semibold mb-3">진행률 대시보드</h2>
+          <ul className="flex-1 overflow-y-auto space-y-2 text-gray-700">
+            <li>📌 <strong>업로드 상태:</strong> 대기 중</li>
+            <li>📌 <strong>학습 과제:</strong> 메타데이터 최적화</li>
+            <li>📌 <strong>지난 성공률:</strong> 95%</li>
+            <li>📌 <strong>다음 업데이트:</strong> 자정</li>
           </ul>
-          <button className="mt-2 rounded-lg border p-2">실시간 새로고침</button>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-3 bg-indigo-500 text-white rounded-lg p-2 hover:bg-indigo-600"
+          >
+            새로고침
+          </button>
         </div>
       </div>
     </div>
