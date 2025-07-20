@@ -1,111 +1,88 @@
-from flask import Flask, render_template_string, request, jsonify
-import concurrent.futures
-import threading
-import time
-
-app = Flask(__name__)
-
-# ----- 리마/상황판 상태 -----
-TOTAL_RIMA = 10    # 100000으로 확장 가능
-languages = ['en','zh','ja','vi','es']
-success = 0
-fail = 0
-lock = threading.Lock()
-logs = []
-
-# ----- 리마 실행 함수 -----
-def rima_job(idx):
-    global success, fail, logs
-    lang = languages[idx % len(languages)]
-    msg = f"[RIMA-{idx}] {lang} 업로드 준비..."
-    with lock: logs.append(msg)
-    try:
-        # 여기에 실제 유튜브 업로드 자동화(또는 시뮬레이션) 코드 삽입
-        time.sleep(0.1)
-        msg2 = f"[RIMA-{idx}] {lang} 업로드 성공!"
-        with lock:
-            success += 1
-            logs.append(msg2)
-    except Exception as e:
-        msg2 = f"[RIMA-{idx}] 실패: {str(e)}"
-        with lock:
-            fail += 1
-            logs.append(msg2)
-
-# ----- API/웹서버 -----
-@app.route('/')
-def index():
-    # HTML(상황판/채팅) 직접 렌더링
-    html = '''
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-      <meta charset="UTF-8">
-      <title>리마 상황판/채팅</title>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <script src="https://cdn.tailwindcss.com"></script>
-    </head>
-    <body class="bg-slate-100 min-h-screen">
-      <div class="max-w-xl mx-auto p-4">
-        <h2 class="text-2xl font-bold mb-4 text-indigo-700">리마 상황판/채팅</h2>
-        <div id="status" class="bg-white rounded-xl shadow p-3 mb-3 text-indigo-900"></div>
-        <div id="chat" class="bg-slate-50 rounded-xl shadow p-3 mb-2 h-64 overflow-y-auto text-sm"></div>
-        <div class="flex gap-2">
-          <input id="msg" class="flex-1 border rounded p-2" placeholder="메시지/명령 입력"/>
-          <button onclick="sendMsg()" class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-semibold">전송</button>
-          <button onclick="runRima()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold ml-1">리마 실행</button>
-        </div>
-      </div>
-      <script>
-        async function update() {
-          let res = await fetch('/status'); let j = await res.json();
-          document.getElementById('status').innerHTML =
-            `리마: ${j.total}개<br>성공: ${j.success} / 실패: ${j.fail} / 진행률: ${j.progress}`;
-          document.getElementById('chat').innerHTML =
-            j.logs.slice(-30).map(m=>"<div>"+m+"</div>").join('');
-          document.getElementById('chat').scrollTop = 99999;
-        }
-        async function sendMsg() {
-          let m = document.getElementById('msg').value;
-          if(!m) return;
-          await fetch('/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({'msg': m})});
-          document.getElementById('msg').value = '';
-          update();
-        }
-        async function runRima() {
-          await fetch('/run', {method:'POST'});
-          setTimeout(update, 500);
-        }
-        setInterval(update, 1200);
-        update();
-      </script>
-    </body>
-    </html>
-    '''
-    return render_template_string(html)
-
-@app.route('/status')
-def status():
-    global success, fail, logs
-    prog = f"{(success+fail)/TOTAL_RIMA*100:.2f}%" if TOTAL_RIMA>0 else "0%"
-    return jsonify({'total': TOTAL_RIMA, 'success': success, 'fail': fail, 'progress': prog, 'logs': logs})
-
-@app.route('/chat', methods=['POST'])
-def chat():
-    global logs
-    data = request.json
-    logs.append(f"<b>나:</b> {data['msg']}")
-    return jsonify({'result':'ok'})
-
-@app.route('/run', methods=['POST'])
-def run():
-    global success, fail, logs
-    # 상태 리셋
-    success = 0; fail = 0; logs.clear()
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        executor.map(rima_job, range(1, TOTAL_RIMA+1))
-    logs.append("전체 리마 실행 완료!")
-    return jsonify({'result':'ok'})
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>리마 2개 + GPT + 나 채팅</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-indigo-200 min-h-screen">
+  <div class="max-w-lg mx-auto p-4">
+    <h2 class="text-2xl font-bold mb-4 text-indigo-700 text-center">리마 x2 · GPT · 나<br>실시간 멀티 채팅</h2>
+    <div id="chatView" class="bg-white rounded-xl shadow p-4 h-72 mb-4 overflow-y-auto text-sm"></div>
+    <div class="flex gap-2 mb-3">
+      <select id="sender" class="rounded-lg border border-indigo-300 px-2 py-1">
+        <option value="나">나</option>
+        <option value="GPT">GPT</option>
+        <option value="리마1">리마1</option>
+        <option value="리마2">리마2</option>
+      </select>
+      <input id="msg" class="flex-1 rounded-lg border px-2 py-1" placeholder="메시지 또는 명령 입력"/>
+      <button onclick="sendMsg()" class="bg-indigo-600 text-white rounded-lg px-5 py-1 font-semibold hover:bg-indigo-800">전송</button>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="createRima()" class="bg-emerald-500 text-white rounded-lg px-4 py-1 hover:bg-emerald-600">리마 추가 생성</button>
+      <button onclick="removeRima()" class="bg-rose-400 text-white rounded-lg px-4 py-1 hover:bg-rose-600">리마 1개 제거</button>
+      <span class="ml-2 text-indigo-800 font-semibold" id="status"></span>
+    </div>
+  </div>
+  <script>
+    let rimaCount = 2;
+    let history = [
+      {sender:"GPT", text:"실시간 멀티채팅방에 오신 것을 환영합니다!"},
+      {sender:"리마1", text:"리마1 대기중"},
+      {sender:"리마2", text:"리마2 대기중"},
+    ];
+    function sendMsg() {
+      let sender = document.getElementById('sender').value;
+      let msg = document.getElementById('msg').value.trim();
+      if(!msg) return;
+      history.push({sender, text:msg});
+      document.getElementById('msg').value = '';
+      updateChat();
+      // 리마 생성/삭제 명령을 채팅으로도 가능!
+      if(sender === "나" && msg.includes("리마 생성")) createRima();
+      if(sender === "나" && msg.includes("리마 제거")) removeRima();
+      // GPT, 리마 자동 응답 예시(간단)
+      setTimeout(()=>{
+        if(sender==="나" && msg.includes("업로드")) history.push({sender:"GPT", text:"명령 확인, 리마에게 전달중..."});
+        if(sender==="GPT" && msg.includes("리마1")) history.push({sender:"리마1", text:"명령 수신, 실행 완료!"});
+        updateChat();
+      }, 800);
+    }
+    function createRima() {
+      rimaCount++;
+      history.push({sender:"GPT", text:`새 리마${rimaCount} 생성 완료!`});
+      history.push({sender:`리마${rimaCount}`, text:`리마${rimaCount} 대기중`});
+      updateChat();
+      updateStatus();
+    }
+    function removeRima() {
+      if(rimaCount<=1) return;
+      history.push({sender:"GPT", text:`리마${rimaCount} 종료됨.`});
+      rimaCount--;
+      updateChat();
+      updateStatus();
+    }
+    function updateChat() {
+      let chatHTML = "";
+      for(let h of history.slice(-30)) {
+        let nameColor = h.sender==="나"?"text-blue-800":h.sender==="GPT"?"text-fuchsia-600":"text-emerald-700";
+        chatHTML += `<div><b class="${nameColor}">${h.sender}:</b> ${h.text}</div>`;
+      }
+      document.getElementById('chatView').innerHTML = chatHTML;
+      document.getElementById('chatView').scrollTop = 99999;
+    }
+    function updateStatus() {
+      document.getElementById('status').innerText = `리마 인스턴스: ${rimaCount}개`;
+      // 드롭다운 옵션 자동 추가/제거
+      let sel = document.getElementById('sender');
+      let base = ["나","GPT"];
+      sel.innerHTML = base.concat(Array.from({length:rimaCount},(_,i)=>`리마${i+1}`)).map(
+        v=>`<option value="${v}">${v}</option>`
+      ).join('');
+    }
+    updateChat(); updateStatus();
+  </script>
+</body>
+</html>
