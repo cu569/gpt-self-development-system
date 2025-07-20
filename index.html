@@ -2,9 +2,8 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>리마 유튜브 자동업로드 웹앱</title>
+  <title>리마 유튜브 자동업로드</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="manifest" href="manifest.json" />
   <style>
     body { font-family: sans-serif; margin:2em; background:#f8f8ff;}
     .box { max-width:400px; margin:auto; padding:2em; background:white; border-radius:18px; box-shadow:0 3px 10px #bbb;}
@@ -16,16 +15,28 @@
 <body>
   <div class="box">
     <h2>리마 유튜브 자동업로드</h2>
+    
+    <label>채널명</label>
+    <input type="text" id="channel" placeholder="예: C.S.S AI 공식채널"/>
+
+    <label>유튜브 스튜디오 링크</label>
+    <input type="text" id="studioLink" placeholder="https://studio.youtube.com/channel/XXXXXX"/>
+
     <label>동영상 파일</label>
     <input type="file" id="file" accept="video/*"/>
+    
     <label>제목</label>
     <input type="text" id="title"/>
+    
     <label>설명</label>
     <textarea id="desc"></textarea>
+    
     <label>태그 (쉼표 구분)</label>
     <input type="text" id="tags"/>
+    
     <label>예약시간</label>
     <input type="datetime-local" id="schedule"/>
+    
     <button onclick="startUpload()">업로드 시작</button>
     <div id="log">진행 현황/결과 표시</div>
     <hr/>
@@ -36,9 +47,13 @@
   </div>
   <script>
     function startUpload() {
-      document.getElementById('log').innerText = "업로드 준비중(시연용)...";
+      const channel = document.getElementById('channel').value;
+      const studioLink = document.getElementById('studioLink').value;
+      document.getElementById('log').innerText = 
+        `채널명: ${channel}\n스튜디오 링크: ${studioLink}\n업로드 준비중(시연용)...`;
       setTimeout(()=> {
-        document.getElementById('log').innerText = "자동 업로드 완료! (예시)\n[유튜브 링크: https://youtu.be/xxxxxx]";
+        document.getElementById('log').innerText = 
+          `업로드 완료! (예시)\n[유튜브 링크: https://youtu.be/xxxxxx]\n채널명: ${channel}\n스튜디오 바로가기: ${studioLink}`;
       }, 2000);
     }
     function sendChat() {
