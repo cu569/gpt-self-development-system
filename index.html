@@ -1,70 +1,50 @@
-# upload_poc.py
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-import time, os
-
-# 1) 환경 설정: 업로드할 비디오 파일 경로
-VIDEO_PATH = os.path.abspath("path/to/your/video.mp4")
-TITLE = "자동화 PoC 제목"
-DESCRIPTION = "리마 연동 업로드 테스트입니다."
-
-# 2) Chrome 실행 옵션 (기존 로그인 세션 유지용)
-options = webdriver.ChromeOptions()
-# 본인의 Chrome user-data-dir 경로로 변경
-options.add_argument(r"--user-data-dir=C:\Users\<YourUser>\AppData\Local\Google\Chrome\User Data")
-options.add_argument("--profile-directory=Default")  
-options.add_argument("--disable-gpu")
-options.add_argument("--no-sandbox")
-
-driver = webdriver.Chrome(service=Service(), options=options)
-
-try:
-    # 3) 업로드 페이지 접속
-    driver.get("https://studio.youtube.com/upload")
-    time.sleep(5)  # 페이지 로드 대기
-
-    # 4) 파일 업로드 input 요소 찾기
-    file_input = driver.find_element(By.XPATH, "//input[@type='file']")
-    file_input.send_keys(VIDEO_PATH)
-
-    # 5) 제목·설명 입력
-    time.sleep(2)
-    title_el = driver.find_element(By.ID, "textbox")
-    title_el.clear()
-    title_el.send_keys(TITLE)
-
-    # description은 두 번째 textbox
-    desc_el = driver.find_elements(By.ID, "textbox")[1]
-    desc_el.send_keys(DESCRIPTION)
-
-    # 6) 자동 계속하기 클릭 (다음 버튼)
-    for _ in range(3):
-        next_btn = driver.find_element(By.XPATH, "//ytcp-button[@id='next-button']")
-        next_btn.click()
-        time.sleep(2)
-
-    # 7) 공개 설정 (예: 공개)
-    public_btn = driver.find_element(By.NAME, "PUBLIC")
-    public_btn.click()
-    time.sleep(1)
-
-    # 8) 업로드 완료
-    done_btn = driver.find_element(By.XPATH, "//ytcp-button[@id='done-button']")
-    done_btn.click()
-
-    # 9) 완료 알림 대기
-    # YouTube 스튜디오가 “게시됨(Published)” 문구를 보여줄 때까지 최대 60초 대기
-    timeout = time.time() + 60
-    while time.time() < timeout:
-        if "게시됨" in driver.page_source or "Published" in driver.page_source:
-            print("✅ 업로드 성공!")
-            break
-        time.sleep(2)
-    else:
-        print("⚠️ 업로드 확인 타임아웃")
-
-finally:
-    # 테스트 끝나면 브라우저 유지하거나 닫기
-    time.sleep(5)
-    driver.quit()
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>G911 사회안전망</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    body { font-family: sans-serif; text-align: center; margin: 0; padding: 2em; }
+    #sosBtn { font-size: 2em; padding: 1.5em 2em; border-radius: 2em; background: #fa1c2f; color: #fff; border: none; margin: 2em 0; }
+    #status { margin-top: 2em; font-size: 1.1em; color: #222; }
+  </style>
+</head>
+<body>
+  <h1>G911 사회안전망</h1>
+  <button id="sosBtn">🚨 SOS 호출</button>
+  <div id="status"></div>
+  <script>
+    async function getUserInfo() {
+      const pos = await new Promise(res =>
+        navigator.geolocation.getCurrentPosition(res)
+      );
+      return {
+        user: "나의닉네임",
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        time: new Date().toISOString()
+      };
+    }
+    async function sendSOS() {
+      const info = await getUserInfo();
+      fetch("https://api.g911.network/sos/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(info)
+      })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById("status").innerText =
+          "🚨 SOS 전송 완료! (" + data.receivers + "명에게 알림)";
+      })
+      .catch(e => {
+        document.getElementById("status").innerText =
+          "SOS 전송 실패: 네트워크 확인";
+      });
+    }
+    document.getElementById("sosBtn").onclick = sendSOS;
+  </script>
+</body>
+</html>
