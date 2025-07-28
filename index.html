@@ -1,99 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Global SOS Remote</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global Remote with SOS & YouTube</title>
   <style>
-    body { font-family: sans-serif; text-align: center; background: #f7f7fa; }
-    .box { max-width: 350px; margin: 40px auto; background: #fff; border-radius: 20px; box-shadow: 0 4px 24px #0001; padding: 2em 1.5em; }
-    select, input, button { margin: 10px; font-size: 1.1em; border-radius: 12px; padding: .4em 1em; }
-    button { background: #D32F2F; color: #fff; border: none; cursor: pointer; font-weight: bold; box-shadow: 0 2px 6px #0001;}
-    button:hover { background: #B71C1C; }
-    #status { margin-top: 1em; min-height: 2em; color: #1976D2; }
+    body {
+      margin: 0; font-family: Arial, sans-serif;
+      background: #222; color: #fff; text-align: center;
+    }
+    .remote {
+      max-width: 400px; margin: 20px auto; padding: 20px;
+      background: #333; border-radius: 20px; box-shadow: 0 0 10px #000;
+    }
+    h2 { margin-bottom: 20px; }
+    .btn {
+      width: 70px; height: 70px; margin: 5px; border-radius: 50%;
+      font-size: 20px; border: none; cursor: pointer;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+    }
+    .power { background: #0f0; }
+    .sos { background: #f00; color: #fff; font-weight: bold; }
+    .nav-btn { background: #555; color: #fff; }
+    .menu { background: #888; color: #fff; width: 120px; border-radius: 20px; height: 50px; }
+    .lang-select {
+      margin-top: 20px; padding: 10px; font-size: 16px;
+    }
+    #youtube {
+      margin: 20px auto; width: 90%;
+    }
+    #youtube input {
+      width: 70%; padding: 10px; font-size: 16px; border-radius: 5px;
+      border: none;
+    }
+    #youtube button {
+      padding: 10px 15px; font-size: 16px; margin-left: 5px;
+      background: #0af; color: #fff; border: none; border-radius: 5px;
+      cursor: pointer;
+    }
+    #results iframe {
+      width: 100%; height: 200px; margin: 10px 0; border-radius: 10px;
+    }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2 id="title">SOS 리모컨</h2>
-    <select id="lang" onchange="setLang()">
+  <div class="remote">
+    <h2 id="title">Global Remote</h2>
+
+    <!-- 전원 -->
+    <button class="btn power" onclick="alertText('Power')">⏻</button>
+
+    <!-- 채널 / 볼륨 -->
+    <div>
+      <button class="btn nav-btn" onclick="alertText('CH+')">CH +</button>
+      <button class="btn nav-btn" onclick="alertText('CH-')">CH -</button>
+    </div>
+    <div>
+      <button class="btn nav-btn" onclick="alertText('VOL+')">VOL +</button>
+      <button class="btn nav-btn" onclick="alertText('VOL-')">VOL -</button>
+    </div>
+
+    <!-- 방향키 -->
+    <div>
+      <button class="btn nav-btn" onclick="alertText('UP')">▲</button><br>
+      <button class="btn nav-btn" onclick="alertText('LEFT')">◀</button>
+      <button class="btn nav-btn" onclick="alertText('OK')">OK</button>
+      <button class="btn nav-btn" onclick="alertText('RIGHT')">▶</button><br>
+      <button class="btn nav-btn" onclick="alertText('DOWN')">▼</button>
+    </div>
+
+    <!-- 메뉴/뒤로 -->
+    <div>
+      <button class="menu" onclick="alertText('Menu')">MENU</button>
+      <button class="menu" onclick="alertText('Back')">BACK</button>
+    </div>
+
+    <!-- SOS -->
+    <div>
+      <button class="btn sos" onclick="sendSOS()">SOS</button>
+    </div>
+
+    <!-- 언어 선택 -->
+    <select id="language" class="lang-select" onchange="setLanguage(this.value)">
+      <!-- 100개 언어 중 일부 예시 -->
       <option value="ko">한국어</option>
       <option value="en">English</option>
-      <option value="ja">日本語</option>
       <option value="zh">中文</option>
-      <option value="vi">Tiếng Việt</option>
-      <option value="ru">Русский</option>
       <option value="es">Español</option>
-      <option value="ar">العربية</option>
       <option value="fr">Français</option>
       <option value="de">Deutsch</option>
-      <!-- 필요시 추가 -->
+      <option value="ar">العربية</option>
+      <option value="ru">Русский</option>
+      <option value="ja">日本語</option>
+      <option value="vi">Tiếng Việt</option>
+      <!-- 나머지 90개는 JSON 기반 확장 -->
     </select>
-    <br>
-    <input id="keyword" placeholder="암구호/SOS 단어 입력">
-    <button onclick="saveKeyword()" id="saveBtn">저장</button>
-    <br>
-    <button onclick="sendSOS()" id="sosBtn">SOS</button>
-    <button onclick="startRec()" id="speechBtn">음성감지</button>
-    <div id="status"></div>
+
+    <!-- 유튜브 검색 -->
+    <div id="youtube">
+      <input type="text" id="query" placeholder="Search YouTube">
+      <button onclick="searchYouTube()">Search</button>
+    </div>
+
+    <!-- 결과 -->
+    <div id="results"></div>
   </div>
+
   <script>
-    // 다국어 UI/음성언어 테이블
-    const langMap = {
-      'ko': {title:'SOS 리모컨', save:'저장', sos:'SOS', speech:'음성감지', placeholder:'암구호/SOS 단어 입력', status1:'암구호 저장됨!', status2:'SOS 전송!', rec:'ko-KR'},
-      'en': {title:'SOS Remote', save:'Save', sos:'SOS', speech:'Voice Detect', placeholder:'Enter Secret Word/SOS', status1:'Keyword saved!', status2:'SOS sent!', rec:'en-US'},
-      'ja': {title:'SOSリモコン', save:'保存', sos:'SOS', speech:'音声認識', placeholder:'合言葉/SOSを入力', status1:'合言葉を保存しました！', status2:'SOS送信！', rec:'ja-JP'},
-      'zh': {title:'SOS遥控器', save:'保存', sos:'SOS', speech:'语音识别', placeholder:'输入暗号/SOS', status1:'已保存暗号！', status2:'已发送SOS！', rec:'zh-CN'},
-      'vi': {title:'Điều Khiển SOS', save:'Lưu', sos:'SOS', speech:'Nhận diện giọng nói', placeholder:'Nhập mật khẩu/SOS', status1:'Đã lưu từ khóa!', status2:'Đã gửi SOS!', rec:'vi-VN'},
-      'ru': {title:'SOS Пульт', save:'Сохранить', sos:'SOS', speech:'Распознавание голоса', placeholder:'Введите кодовое слово/SOS', status1:'Кодовое слово сохранено!', status2:'SOS отправлено!', rec:'ru-RU'},
-      'es': {title:'Control SOS', save:'Guardar', sos:'SOS', speech:'Detectar voz', placeholder:'Palabra clave/SOS', status1:'¡Palabra clave guardada!', status2:'¡SOS enviado!', rec:'es-ES'},
-      'ar': {title:'جهاز تحكم SOS', save:'حفظ', sos:'SOS', speech:'كشف الصوت', placeholder:'أدخل كلمة السر/SOS', status1:'تم حفظ الكلمة السرية!', status2:'تم إرسال SOS!', rec:'ar-SA'},
-      'fr': {title:'Télécommande SOS', save:'Enregistrer', sos:'SOS', speech:'Reconnaissance vocale', placeholder:'Entrer mot-clé/SOS', status1:'Mot-clé enregistré!', status2:'SOS envoyé!', rec:'fr-FR'},
-      'de': {title:'SOS-Fernbedienung', save:'Speichern', sos:'SOS', speech:'Spracherkennung', placeholder:'Codewort/SOS eingeben', status1:'Codewort gespeichert!', status2:'SOS gesendet!', rec:'de-DE'},
+    // 다국어 지원
+    const translations = {
+      ko: { title: "글로벌 리모컨", sos: "긴급 구조", search: "검색" },
+      en: { title: "Global Remote", sos: "SOS", search: "Search" },
+      zh: { title: "全球遥控器", sos: "紧急", search: "搜索" },
+      es: { title: "Control Remoto Global", sos: "SOS", search: "Buscar" },
+      fr: { title: "Télécommande Globale", sos: "SOS", search: "Recherche" },
+      de: { title: "Global-Fernbedienung", sos: "SOS", search: "Suche" },
+      ar: { title: "جهاز التحكم العالمي", sos: "النجدة", search: "بحث" },
+      ru: { title: "Глобальный пульт", sos: "SOS", search: "Поиск" },
+      ja: { title: "グローバルリモコン", sos: "SOS", search: "検索" },
+      vi: { title: "Điều khiển Toàn cầu", sos: "SOS", search: "Tìm kiếm" }
     };
-    function setLang() {
-      const lang = document.getElementById('lang').value;
-      document.getElementById('title').innerText = langMap[lang].title;
-      document.getElementById('saveBtn').innerText = langMap[lang].save;
-      document.getElementById('sosBtn').innerText = langMap[lang].sos;
-      document.getElementById('speechBtn').innerText = langMap[lang].speech;
-      document.getElementById('keyword').placeholder = langMap[lang].placeholder;
-      document.getElementById('status').innerText = '';
-      localStorage.setItem('lang', lang);
+
+    function setLanguage(lang) {
+      document.getElementById('title').innerText = translations[lang].title;
+      document.querySelector('.sos').innerText = translations[lang].sos;
+      document.querySelector('#youtube button').innerText = translations[lang].search;
     }
-    window.onload = () => {
-      const saved = localStorage.getItem('lang') || 'ko';
-      document.getElementById('lang').value = saved;
-      setLang();
+
+    // 버튼 클릭 시 알림
+    function alertText(txt) {
+      alert(txt + " pressed");
     }
-    function saveKeyword() {
-      localStorage.setItem('sos_keyword', document.getElementById('keyword').value);
-      document.getElementById('status').innerText = langMap[document.getElementById('lang').value].status1;
-    }
+
+    // SOS 기능
     function sendSOS() {
-      // 실제 서버주소로 바꾸세요!
-      fetch("https://YOUR_SERVER/sos", {
-        method:"POST",
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({msg:"SOS", type:"SOS"})
-      }).catch(()=>{});
-      document.getElementById('status').innerText = langMap[document.getElementById('lang').value].status2;
+      alert("🚨 SOS Activated!");
+      // 여기서 실제 SOS API 호출 / 알림 연동
     }
-    function startRec() {
-      const lang = document.getElementById('lang').value;
-      const rec = new(window.SpeechRecognition || window.webkitSpeechRecognition)();
-      rec.lang = langMap[lang].rec;
-      rec.start();
-      rec.onresult = function(e) {
-        const text = e.results[0][0].transcript;
-        const keyword = localStorage.getItem('sos_keyword') || '';
-        if (text.trim().toLowerCase().includes(keyword.trim().toLowerCase()) && keyword.trim().length > 0) {
-          sendSOS();
-        } else {
-          document.getElementById("status").innerText = '미일치 / Not matched';
-        }
-      };
+
+    // 유튜브 검색 (iframe 사용)
+    function searchYouTube() {
+      const query = document.getElementById('query').value;
+      const results = document.getElementById('results');
+      results.innerHTML = `<iframe src="https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(query)}" frameborder="0" allowfullscreen></iframe>`;
     }
+
+    // 언어 자동 감지
+    const userLang = navigator.language.slice(0,2);
+    if (translations[userLang]) setLanguage(userLang);
+    else setLanguage('en');
   </script>
 </body>
 </html>
