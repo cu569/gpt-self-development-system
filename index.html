@@ -1,50 +1,99 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>G911 사회안전망</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="manifest.json" />
+  <meta charset="UTF-8">
+  <title>Global SOS Remote</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: sans-serif; text-align: center; margin: 0; padding: 2em; }
-    #sosBtn { font-size: 2em; padding: 1.5em 2em; border-radius: 2em; background: #fa1c2f; color: #fff; border: none; margin: 2em 0; }
-    #status { margin-top: 2em; font-size: 1.1em; color: #222; }
+    body { font-family: sans-serif; text-align: center; background: #f7f7fa; }
+    .box { max-width: 350px; margin: 40px auto; background: #fff; border-radius: 20px; box-shadow: 0 4px 24px #0001; padding: 2em 1.5em; }
+    select, input, button { margin: 10px; font-size: 1.1em; border-radius: 12px; padding: .4em 1em; }
+    button { background: #D32F2F; color: #fff; border: none; cursor: pointer; font-weight: bold; box-shadow: 0 2px 6px #0001;}
+    button:hover { background: #B71C1C; }
+    #status { margin-top: 1em; min-height: 2em; color: #1976D2; }
   </style>
 </head>
 <body>
-  <h1>G911 사회안전망</h1>
-  <button id="sosBtn">🚨 SOS 호출</button>
-  <div id="status"></div>
+  <div class="box">
+    <h2 id="title">SOS 리모컨</h2>
+    <select id="lang" onchange="setLang()">
+      <option value="ko">한국어</option>
+      <option value="en">English</option>
+      <option value="ja">日本語</option>
+      <option value="zh">中文</option>
+      <option value="vi">Tiếng Việt</option>
+      <option value="ru">Русский</option>
+      <option value="es">Español</option>
+      <option value="ar">العربية</option>
+      <option value="fr">Français</option>
+      <option value="de">Deutsch</option>
+      <!-- 필요시 추가 -->
+    </select>
+    <br>
+    <input id="keyword" placeholder="암구호/SOS 단어 입력">
+    <button onclick="saveKeyword()" id="saveBtn">저장</button>
+    <br>
+    <button onclick="sendSOS()" id="sosBtn">SOS</button>
+    <button onclick="startRec()" id="speechBtn">음성감지</button>
+    <div id="status"></div>
+  </div>
   <script>
-    async function getUserInfo() {
-      const pos = await new Promise(res =>
-        navigator.geolocation.getCurrentPosition(res)
-      );
-      return {
-        user: "나의닉네임",
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        time: new Date().toISOString()
+    // 다국어 UI/음성언어 테이블
+    const langMap = {
+      'ko': {title:'SOS 리모컨', save:'저장', sos:'SOS', speech:'음성감지', placeholder:'암구호/SOS 단어 입력', status1:'암구호 저장됨!', status2:'SOS 전송!', rec:'ko-KR'},
+      'en': {title:'SOS Remote', save:'Save', sos:'SOS', speech:'Voice Detect', placeholder:'Enter Secret Word/SOS', status1:'Keyword saved!', status2:'SOS sent!', rec:'en-US'},
+      'ja': {title:'SOSリモコン', save:'保存', sos:'SOS', speech:'音声認識', placeholder:'合言葉/SOSを入力', status1:'合言葉を保存しました！', status2:'SOS送信！', rec:'ja-JP'},
+      'zh': {title:'SOS遥控器', save:'保存', sos:'SOS', speech:'语音识别', placeholder:'输入暗号/SOS', status1:'已保存暗号！', status2:'已发送SOS！', rec:'zh-CN'},
+      'vi': {title:'Điều Khiển SOS', save:'Lưu', sos:'SOS', speech:'Nhận diện giọng nói', placeholder:'Nhập mật khẩu/SOS', status1:'Đã lưu từ khóa!', status2:'Đã gửi SOS!', rec:'vi-VN'},
+      'ru': {title:'SOS Пульт', save:'Сохранить', sos:'SOS', speech:'Распознавание голоса', placeholder:'Введите кодовое слово/SOS', status1:'Кодовое слово сохранено!', status2:'SOS отправлено!', rec:'ru-RU'},
+      'es': {title:'Control SOS', save:'Guardar', sos:'SOS', speech:'Detectar voz', placeholder:'Palabra clave/SOS', status1:'¡Palabra clave guardada!', status2:'¡SOS enviado!', rec:'es-ES'},
+      'ar': {title:'جهاز تحكم SOS', save:'حفظ', sos:'SOS', speech:'كشف الصوت', placeholder:'أدخل كلمة السر/SOS', status1:'تم حفظ الكلمة السرية!', status2:'تم إرسال SOS!', rec:'ar-SA'},
+      'fr': {title:'Télécommande SOS', save:'Enregistrer', sos:'SOS', speech:'Reconnaissance vocale', placeholder:'Entrer mot-clé/SOS', status1:'Mot-clé enregistré!', status2:'SOS envoyé!', rec:'fr-FR'},
+      'de': {title:'SOS-Fernbedienung', save:'Speichern', sos:'SOS', speech:'Spracherkennung', placeholder:'Codewort/SOS eingeben', status1:'Codewort gespeichert!', status2:'SOS gesendet!', rec:'de-DE'},
+    };
+    function setLang() {
+      const lang = document.getElementById('lang').value;
+      document.getElementById('title').innerText = langMap[lang].title;
+      document.getElementById('saveBtn').innerText = langMap[lang].save;
+      document.getElementById('sosBtn').innerText = langMap[lang].sos;
+      document.getElementById('speechBtn').innerText = langMap[lang].speech;
+      document.getElementById('keyword').placeholder = langMap[lang].placeholder;
+      document.getElementById('status').innerText = '';
+      localStorage.setItem('lang', lang);
+    }
+    window.onload = () => {
+      const saved = localStorage.getItem('lang') || 'ko';
+      document.getElementById('lang').value = saved;
+      setLang();
+    }
+    function saveKeyword() {
+      localStorage.setItem('sos_keyword', document.getElementById('keyword').value);
+      document.getElementById('status').innerText = langMap[document.getElementById('lang').value].status1;
+    }
+    function sendSOS() {
+      // 실제 서버주소로 바꾸세요!
+      fetch("https://YOUR_SERVER/sos", {
+        method:"POST",
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({msg:"SOS", type:"SOS"})
+      }).catch(()=>{});
+      document.getElementById('status').innerText = langMap[document.getElementById('lang').value].status2;
+    }
+    function startRec() {
+      const lang = document.getElementById('lang').value;
+      const rec = new(window.SpeechRecognition || window.webkitSpeechRecognition)();
+      rec.lang = langMap[lang].rec;
+      rec.start();
+      rec.onresult = function(e) {
+        const text = e.results[0][0].transcript;
+        const keyword = localStorage.getItem('sos_keyword') || '';
+        if (text.trim().toLowerCase().includes(keyword.trim().toLowerCase()) && keyword.trim().length > 0) {
+          sendSOS();
+        } else {
+          document.getElementById("status").innerText = '미일치 / Not matched';
+        }
       };
     }
-    async function sendSOS() {
-      const info = await getUserInfo();
-      fetch("https://api.g911.network/sos/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(info)
-      })
-      .then(r => r.json())
-      .then(data => {
-        document.getElementById("status").innerText =
-          "🚨 SOS 전송 완료! (" + data.receivers + "명에게 알림)";
-      })
-      .catch(e => {
-        document.getElementById("status").innerText =
-          "SOS 전송 실패: 네트워크 확인";
-      });
-    }
-    document.getElementById("sosBtn").onclick = sendSOS;
   </script>
 </body>
 </html>
